@@ -26,7 +26,7 @@
 
 ---
 
-## 🚀 Bắt đầu (Chạy bằng npm — không dùng Docker)
+## 🚀 Bắt đầu
 
 Yêu cầu trước:
 - Cài Node.js (khuyến nghị v20)
