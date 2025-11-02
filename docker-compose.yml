@@ -29,8 +29,6 @@ services:
       NODE_ENV: production
       # Prisma/MySQL
       DATABASE_URL: mysql://root:1234@mysql:3306/drone_fastfood
-      # Tự động seed dữ liệu mẫu khi khởi động (chỉ dùng cho demo/dev)
-      AUTO_SEED: "true"
       # Xác thực và thanh toán (hãy thay đổi trong môi trường production)
       JWT_SECRET: changeme-in-dev
       PAYMENT_WEBHOOK_SECRET: dev-webhook-secret

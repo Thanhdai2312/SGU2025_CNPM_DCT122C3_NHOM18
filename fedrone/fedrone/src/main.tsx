@@ -23,6 +23,8 @@ import AdminDeliveries from './pages/admin/AdminDeliveries.tsx';
 import AdminMonitor from './pages/admin/AdminMonitor.tsx';
 import AdminOrderDetail from './pages/admin/AdminOrderDetail.tsx';
 import AdminProducts from './pages/admin/AdminProducts.tsx';
+import AdminKitchen from './pages/admin/AdminKitchen.tsx';
+import AdminUsers from './pages/admin/AdminUsers.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -49,6 +51,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="deliveries" element={<AdminDeliveries />} />
             <Route path="monitor" element={<AdminMonitor />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="kitchen" element={<AdminKitchen />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
         </Routes>
       </AuthProvider>
