@@ -1,22 +1,19 @@
-# Hướng dẫn chạy dự án bằng npm (local dev)
+# Hướng dẫn chạy dự án bằng npm (local)
 
-Tài liệu này hướng dẫn chạy project trên máy cá nhân bằng npm (không dùng Docker cho ứng dụng). Bạn vẫn cần MySQL đang chạy (có thể cài local hoặc chạy MySQL qua Docker).
+Tài liệu này hướng dẫn chạy dự án trên máy cá nhân bằng npm (không sử dụng Docker).
 
 ## 1) Chuẩn bị
 - Node.js LTS (khuyến nghị v20)
 - npm (đi kèm Node)
-- MySQL 8.0 (một trong các cách):
-  - Cách A: Cài MySQL trên máy, tạo user `root`/`1234` (hoặc dùng user của bạn) và database `drone_fastfood`.
-  - Cách B: Chạy MySQL bằng Docker (chỉ chạy DB):
-    ```cmd
-    docker run -d --name mysql8 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=1234 -e MYSQL_DATABASE=drone_fastfood mysql:8.0 --default-authentication-plugin=mysql_native_password --lower_case_table_names=1
-    ```
+- MySQL 8.0 cài trên máy (service đang chạy)
+  - Tạo user `root`/`1234` (hoặc dùng tài khoản của bạn)
+  - Tạo database `drone_fastfood`
 
 ## 2) Cấu hình backend (.env)
 - Tại thư mục `backend`, sao chép tệp `.env.example` thành `.env` rồi chỉnh thông số nếu cần.
 - Ví dụ `.env` tối thiểu (theo mặc định file mẫu):
   ```env
-  PORT=3001
+  PORT=3000
   JWT_SECRET=changeme-in-dev
   DATABASE_URL=mysql://root:1234@localhost:3306/drone_fastfood
   PAYMENT_WEBHOOK_SECRET=dev-webhook-secret
@@ -48,13 +45,13 @@ Tài liệu này hướng dẫn chạy project trên máy cá nhân bằng npm (
   ```cmd
   cd /d C:\CONGNNGHEPHANMEM\backend
   npm run dev
-  # Server lắng nghe tại http://localhost:3001
+  # Server lắng nghe tại http://localhost:3000
   ```
 
 - Chạy frontend dev (Vite):
-  - Nếu backend chạy ở cổng 3001, cấu hình API base cho FE qua biến môi trường Vite (tuỳ chọn, nếu FE chưa tự trỏ đúng):
+  - Nếu backend chạy ở cổng 3000, cấu hình API base cho FE qua biến môi trường Vite (tuỳ chọn, nếu FE chưa tự trỏ đúng):
     ```cmd
-    set VITE_API_BASE_URL=http://localhost:3001
+    set VITE_API_BASE_URL=http://localhost:3000
     ```
   - Khởi chạy Vite:
     ```cmd
@@ -71,15 +68,22 @@ Tài liệu này hướng dẫn chạy project trên máy cá nhân bằng npm (
   cd /d C:\CONGNNGHEPHANMEM\fedrone\fedrone
   npm run build
   ```
-- Để backend phục vụ file tĩnh FE, copy hoặc giữ cấu hình đọc `public` như đã hỗ trợ (project đã hỗ trợ phục vụ build FE).
+- Copy build frontend sang thư mục public của backend để server phục vụ tĩnh:
+  - Tạo thư mục `backend\public` nếu chưa có.
+  - Sao chép toàn bộ `fedrone\fedrone\dist` vào `backend\public` (có thể dùng File Explorer hoặc lệnh):
+    ```cmd
+    cd /d C:\CONGNNGHEPHANMEM\backend
+    if not exist public mkdir public
+    robocopy ..\fedrone\fedrone\dist public /E
+    ```
 - Build + start backend:
   ```cmd
   cd /d C:\CONGNNGHEPHANMEM\backend
   npm run build
   npm run start
-  # Mặc định lắng nghe theo PORT trong .env (3001)
+  # Mặc định lắng nghe theo PORT trong .env (3000)
   ```
-- Truy cập: http://localhost:3001
+- Truy cập: http://localhost:3000
 
 ## 6) Tài khoản admin và dữ liệu mẫu
 - Sau khi migrate + seed:
@@ -90,24 +94,17 @@ Tài liệu này hướng dẫn chạy project trên máy cá nhân bằng npm (
        ```cmd
        mysql -uroot -p1234 -D drone_fastfood -e "UPDATE User SET role='ADMIN' WHERE email='YOUR_EMAIL@EXAMPLE.COM';"
        ```
-    3) Đăng nhập trang Admin: http://localhost:5173/admin/login (dev) hoặc http://localhost:3001/admin/login (prod) và dùng các nút seed trong UI (nếu có) để thêm dữ liệu.
+  3) Đăng nhập trang Admin: http://localhost:5173/admin/login (dev) hoặc http://localhost:3000/admin/login (prod) và dùng các nút seed trong UI (nếu có) để thêm dữ liệu.
 
 ## 7) Lỗi thường gặp
 - "@prisma/client did not initialize yet":
   - Chạy `npm run prisma:generate`, sau đó thử lại.
 - Không kết nối được MySQL:
   - Kiểm tra `DATABASE_URL` đúng host/port/user/pass.
-  - Nếu dùng Docker cho MySQL, host là `localhost` (khi publish port), port 3306 (mặc định) hoặc cổng bạn đã map.
+  - Kiểm tra MySQL service đang chạy, user có quyền tạo/migrate DB.
 - Port xung đột:
-  - Thay `PORT` trong `.env` backend (ví dụ 3002) và cập nhật `VITE_API_BASE_URL` tương ứng.
+  - Đổi `PORT` trong `backend/.env` (ví dụ 3002) và cập nhật `VITE_API_BASE_URL` tương ứng khi chạy FE dev.
 - Seed lỗi vì thiếu quyền/DB chưa tồn tại:
   - Đảm bảo `npm run prisma:migrate` chạy OK trước.
 
-## 8) So sánh nhanh với Docker
-- npm (dev): nhanh, hot reload, nhưng cần cài Node + MySQL; phải tự cấu hình .env.
-- Docker (demo/prod): đơn giản, ít phụ thuộc môi trường; trong project đã có `docker-compose.yml` chạy MySQL + app nhanh.
 
-## 9) Hỏi & Đáp nhanh
-- Hỏi: Có thể chỉ chạy backend bằng npm và frontend bằng Vite không? → Được, đó là quy trình dev ở mục 4.
-- Hỏi: Muốn dùng cổng 3000 cho backend? → Đổi `PORT=3000` trong `backend/.env` và cập nhật `VITE_API_BASE_URL`.
-- Hỏi: Không muốn seed bằng ts-node? → Có thể chuyển seed về JS (build sang `dist`) — liên hệ để mình thiết lập.
