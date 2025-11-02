@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE `menuitem` ADD COLUMN `imageUrl` VARCHAR(191) NULL,
+    ADD COLUMN `stock` INTEGER NULL,
+    ADD COLUMN `type` ENUM('FOOD', 'DRINK') NOT NULL DEFAULT 'FOOD';

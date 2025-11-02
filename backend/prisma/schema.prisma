@@ -1,5 +1,5 @@
-// Prisma schema for Drone Fastfood (MySQL)
-// Naming: snake_case in db via @@map/ @map where needed, but keep Prisma camelCase for code clarity
+// Prisma schema cho Drone Fastfood (MySQL)
+// Quy ước: dùng camelCase trong Prisma để code rõ ràng; ánh xạ sang snake_case ở DB nếu cần bằng @@map/@map
 
 generator client {
   provider = "prisma-client-js"
@@ -14,6 +14,7 @@ model User {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
+  phone        String?  @unique
   passwordHash String
   role         UserRole @default(CUSTOMER)
   createdAt    DateTime @default(now())
@@ -24,7 +25,6 @@ model User {
 enum UserRole {
   CUSTOMER
   ADMIN
-  OPERATOR
 }
 
 model Restaurant {
@@ -35,6 +35,8 @@ model Restaurant {
   lng       Float
   menuItems MenuItem[]
   orders    Order[]
+  drones    Drone[]
+  currentDrones Drone[] @relation("CurrentStation")
 }
 
 model MenuItem {
@@ -45,10 +47,18 @@ model MenuItem {
   price         Decimal    @db.Decimal(10,2)
   weight        Decimal    @db.Decimal(10,2)
   isAvailable   Boolean    @default(true)
+  type          MenuItemType @default(FOOD)
+  imageUrl      String?
+  stock         Int?        // null = không quản lý tồn; số nguyên >= 0
   orderItems    OrderItem[]
   cartItems     CartItem[]
 
   @@index([restaurantId, isAvailable])
+}
+
+enum MenuItemType {
+  FOOD
+  DRINK
 }
 
 model Order {
@@ -64,6 +74,7 @@ model Order {
   destLng       Float?
   status        OrderStatus   @default(CREATED)
   paymentStatus PaymentStatus @default(PENDING)
+  kitchenDone   Boolean       @default(false)
   createdAt     DateTime      @default(now())
   orderItems    OrderItem[]
   payment       Payment?
@@ -120,9 +131,23 @@ model Drone {
   capacityKg    Decimal     @db.Decimal(10,2)
   maxRangeKm    Decimal     @db.Decimal(10,2)
   batteryPercent Int        @default(100)
+  // Vị trí hiện tại của drone
+  currentLat    Float       @default(0)
+  currentLng    Float       @default(0)
+  // Trạm sạc sở hữu (nhà hàng gốc)
+  homeStationId String?
+  homeStation   Restaurant? @relation(fields: [homeStationId], references: [id])
+  // Trạm hiện tại (nếu đang đậu/sạc tại 1 nhà hàng)
+  currentStationId String?
+  currentStation   Restaurant? @relation("CurrentStation", fields: [currentStationId], references: [id])
+  // Độ ưu tiên chọn drone khi dispatch (số nhỏ ưu tiên trước)
+  priority      Int         @default(1)
   deliveries    Delivery[]
 
   @@index([status])
+  @@index([homeStationId])
+  @@index([currentStationId])
+  @@index([priority])
 }
 
 enum DroneStatus {
@@ -167,7 +192,7 @@ model CartItem {
   @@unique([cartId, menuItemId])
 }
 
-// Lưu log webhook để idempotency
+// Lưu log webhook để đảm bảo idempotency
 model WebhookEvent {
   id              String   @id @default(cuid())
   idempotencyKey  String   @unique
@@ -192,6 +217,6 @@ model Route {
   startLng   Float
   endLat     Float
   endLng     Float
-  // path lưu dạng JSON đơn giản (list tọa độ)
+  // path lưu dạng JSON đơn giản (danh sách toạ độ)
   path       Json?
 }

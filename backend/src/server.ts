@@ -1,0 +1,94 @@
+import express from 'express';
+import dotenv from 'dotenv';
+import morgan from 'morgan';
+import cors from 'cors';
+import { createServer } from 'http';
+import path from 'path';
+import fs from 'fs';
+
+import { router as healthRouter } from './api/health';
+import { router as restaurantsRouter } from './api/restaurants';
+import { router as authRouter } from './api/auth';
+import { router as cartRouter } from './api/cart';
+import { router as checkoutRouter } from './api/checkout';
+import { router as paymentRouter } from './api/payment';
+import ordersRouter from './api/orders';
+import droneRouter from './api/drone';
+import deliveryRouter from './api/delivery';
+import trackingRouter from './api/tracking';
+import menuAdminRouter from './api/menuAdmin';
+import { router as usersAdminRouter } from './api/usersAdmin';
+import { router as kitchenAdminRouter } from './api/kitchenAdmin';
+import { deliveryWorker } from './services/deliveryWorker';
+import { initWebSocket } from './websocket/server';
+
+dotenv.config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(morgan('dev'));
+
+// Định tuyến API chính của hệ thống
+app.use('/api/health', healthRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/restaurants', restaurantsRouter);
+app.use('/api/cart', cartRouter);
+app.use('/api/checkout', checkoutRouter);
+app.use('/api/payment', paymentRouter);
+app.use('/api/orders', ordersRouter);
+app.use('/api/drone', droneRouter);
+app.use('/api/delivery', deliveryRouter);
+app.use('/api/tracking', trackingRouter);
+app.use('/api/admin/menu', menuAdminRouter);
+app.use('/api/admin/users', usersAdminRouter);
+app.use('/api/admin/kitchen', kitchenAdminRouter);
+
+// Phục vụ frontend (demo một cổng): thử các vị trí thường gặp của bản build
+(() => {
+  const candidates = [
+    // chạy từ thư mục gốc repo
+    path.resolve(process.cwd(), 'frontend', 'dist'),
+    // ứng dụng fedrone (từ gốc repo)
+    path.resolve(process.cwd(), 'fedrone', 'fedrone', 'dist'),
+    // chạy từ thư mục backend
+    path.resolve(process.cwd(), '..', 'frontend', 'dist'),
+    // ứng dụng fedrone (từ thư mục backend)
+    path.resolve(process.cwd(), '..', 'fedrone', 'fedrone', 'dist'),
+    // dự phòng: thư mục public trong backend
+    path.resolve(process.cwd(), 'public')
+  ];
+  const staticDir = candidates.find(p => fs.existsSync(p));
+  if (staticDir) {
+    app.use(express.static(staticDir));
+    // SPA fallback: chỉ áp dụng cho route không phải /api
+    app.get('*', (req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      res.sendFile(path.join(staticDir, 'index.html'));
+    });
+    console.log(`[static] Phục vụ frontend từ: ${staticDir}`);
+  } else {
+    console.log('[static] Không tìm thấy dist/public của frontend, bỏ qua bước static serve');
+  }
+})();
+
+// Trình xử lý lỗi chuẩn trả về JSON { message }
+app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  // Xác định status và message từ đối tượng lỗi
+  type ErrWithStatus = { status?: number };
+  const status = (typeof err === 'object' && err && 'status' in err && typeof (err as ErrWithStatus).status === 'number')
+    ? (err as ErrWithStatus).status as number
+    : 500;
+  const message = (err instanceof Error) ? err.message : 'Internal Server Error';
+  res.status(status).json({ message });
+});
+
+const port = process.env.PORT || 3000;
+const httpServer = createServer(app);
+initWebSocket(httpServer);
+
+httpServer.listen(port, () => {
+  console.log(`HTTP + WebSocket server lắng nghe tại http://localhost:${port}`);
+  // Tự động khởi động worker mô phỏng giao hàng (singleton)
+  deliveryWorker.start(1000);
+});

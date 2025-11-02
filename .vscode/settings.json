@@ -1,0 +1,5 @@
+{
+  // Use the TypeScript version from fedrone app to match its tsconfig options (TS 5.x)
+  "typescript.tsdk": "fedrone/fedrone/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}
