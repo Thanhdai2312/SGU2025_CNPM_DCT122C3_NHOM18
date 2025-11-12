@@ -1,3 +1,6 @@
+// Trang Thống kê hôm nay cho Nhà hàng
+// - Lấy số món đã làm và tổng doanh thu của riêng nhà hàng (theo workRestaurantId) từ API /api/admin/kitchen/stats/today
+// - Chỉ dùng trong khu vực /restaurant, token sẽ là restaurantToken
 import { useEffect, useState } from 'react';
 import { API_BASE } from '../../api/client';
 
@@ -8,6 +11,7 @@ export default function RestaurantStats() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Tải dữ liệu thống kê trong ngày
   const load = async () => {
     try {
       setLoading(true); setError(null);

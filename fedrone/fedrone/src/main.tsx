@@ -46,7 +46,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="orders" element={<MyOrders />} />
             <Route path="orders/:orderId" element={<OrderTracking />} />
           </Route>
-          {/* Standalone Admin app (separate from customer app) */}
+          {/* Ứng dụng Quản trị Admin độc lập (tách khỏi ứng dụng khách) */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminGuard><AdminLayout /></AdminGuard>}>
             <Route index element={<AdminDashboard />} />
@@ -59,7 +59,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="kitchen" element={<AdminKitchen />} />
             <Route path="users" element={<AdminUsers />} />
           </Route>
-          {/* Restaurant namespace - separate layout */}
+          {/* Khu vực Nhà hàng (/restaurant) - dùng layout riêng (màu xanh lá) */}
           <Route path="/restaurant/login" element={<RestaurantLogin />} />
           <Route path="/restaurant" element={<RestaurantGuard><RestaurantLayout /></RestaurantGuard>}>
             <Route index element={<RestaurantStats />} />

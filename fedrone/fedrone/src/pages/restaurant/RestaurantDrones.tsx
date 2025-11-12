@@ -1,3 +1,6 @@
+// Trang Drone cho Nhà hàng
+// - Hiển thị danh sách drone thuộc/đang ở chi nhánh của tôi (đã được backend lọc theo workRestaurantId)
+// - Cho phép Gọi drone về chi nhánh (khi drone đang AVAILABLE)
 import { useEffect, useMemo, useState } from 'react';
 import { droneApi, type Drone } from '../../api/drone';
 import { RefreshCw } from 'lucide-react';
@@ -6,6 +9,7 @@ export default function RestaurantDrones() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [items, setItems] = useState<Drone[]>([]);
+  // Token của phiên đăng nhập Nhà hàng
   const token = useMemo(() => {
     try { return localStorage.getItem('restaurantToken') || undefined; } catch { return undefined; }
   }, []);
@@ -73,6 +77,7 @@ export default function RestaurantDrones() {
   );
 }
 
+// Nút "Gọi drone về" (chỉ khả dụng khi drone đang rảnh AVAILABLE)
 function RecallButton({ d, token, onDone }: { d: Drone; token?: string; onDone: () => Promise<void> | void }) {
   const [working, setWorking] = useState(false);
   const eligible = d.status === 'AVAILABLE';

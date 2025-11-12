@@ -1,3 +1,6 @@
+// Layout dành riêng cho khu vực Nhà hàng (màu xanh lá)
+// - Menu: Drone (xem drone thuộc/nằm ở chi nhánh và gọi drone về), Sản phẩm, Bếp, Thống kê hôm nay
+// - Chỉ dùng cho người dùng role RESTAURANT (đã được RestaurantGuard bảo vệ)
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Plane, Utensils, ChefHat, BarChart3, LogOut, User2 } from 'lucide-react';
 import { getRestaurantSession, clearRestaurantSession } from '../../utils/adminAuth';
@@ -18,7 +21,7 @@ export default function RestaurantLayout() {
   return (
     <div className="min-h-[70vh]">
       <div className="flex">
-        {/* Sidebar - Green theme */}
+  {/* Thanh bên (màu xanh lá cho Nhà hàng) */}
         <aside className="w-64 bg-emerald-700 text-white min-h-full">
           <div className="p-4 font-bold text-xl tracking-wide">
             P&Đ Restaurant
@@ -52,7 +55,7 @@ export default function RestaurantLayout() {
             </div>
           </nav>
         </aside>
-        {/* Content */}
+  {/* Khu vực nội dung */}
         <main className="flex-1 bg-emerald-50/30">
           <div className="p-6">
             <Outlet />

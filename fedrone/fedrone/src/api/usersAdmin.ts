@@ -13,8 +13,11 @@ export type AdminUser = {
   createdAt: string;
 };
 
+import { getActiveAdminArea } from '../utils/adminAuth';
+
 function adminHeaders() {
-  const token = localStorage.getItem('adminToken');
+  const { session } = getActiveAdminArea();
+  const token = session?.token || localStorage.getItem('adminToken');
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   return headers;

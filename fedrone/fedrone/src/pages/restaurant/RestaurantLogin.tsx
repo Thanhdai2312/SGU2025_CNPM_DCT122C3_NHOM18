@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { authApi } from '../../api/client';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-export default function AdminLogin() {
+export default function RestaurantLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -16,44 +16,29 @@ export default function AdminLogin() {
     setLoading(true);
     try {
       const res = await authApi.login(email, password);
-      const parsed = res.user as { role?: string };
-      const role = (parsed?.role || '').toLowerCase();
-      const ok = role === 'admin' || role === 'restaurant';
-      if (!ok) {
-        setError('Tài khoản không có quyền truy cập Admin.');
+      const role = (res.user.role || '').toLowerCase();
+      if (role !== 'restaurant') {
+        setError('Tài khoản không phải nhân viên nhà hàng');
         try {
-          localStorage.removeItem('adminToken');
-          localStorage.removeItem('adminUser');
           localStorage.removeItem('restaurantToken');
           localStorage.removeItem('restaurantUser');
         } catch {}
         return;
       }
-      // Lưu theo role, tránh ghi đè nhau
-      if (role === 'admin') {
-        localStorage.setItem('adminToken', res.accessToken);
-        localStorage.setItem('adminUser', JSON.stringify(res.user));
-      } else {
-        localStorage.setItem('restaurantToken', res.accessToken);
-        localStorage.setItem('restaurantUser', JSON.stringify(res.user));
-      }
-      // Điều hướng mặc định theo role
-      let defaultPath = '/admin';
-      if (role === 'restaurant') defaultPath = '/admin/kitchen';
-      const redirectTo = (location.state as any)?.from?.pathname || defaultPath;
+      localStorage.setItem('restaurantToken', res.accessToken);
+      localStorage.setItem('restaurantUser', JSON.stringify(res.user));
+      const redirectTo = (location.state as any)?.from?.pathname || '/restaurant';
       navigate(redirectTo, { replace: true });
     } catch (e: any) {
       setError(e?.message || 'Đăng nhập thất bại');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-rose-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-emerald-50 flex items-center justify-center p-6">
       <div className="w-full max-w-md bg-white rounded-2xl shadow p-6">
-        <h1 className="text-2xl font-bold text-rose-700 mb-4">Đăng nhập Admin</h1>
-        {error && <div className="mb-3 p-3 rounded border border-rose-200 bg-rose-50 text-rose-700 text-sm">{error}</div>}
+        <h1 className="text-2xl font-bold text-emerald-700 mb-4">Đăng nhập Nhà hàng</h1>
+        {error && <div className="mb-3 p-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm">{error}</div>}
         <form onSubmit={onSubmit} className="space-y-3">
           <div>
             <label className="block text-sm text-gray-700 mb-1">Email</label>
@@ -63,7 +48,7 @@ export default function AdminLogin() {
             <label className="block text-sm text-gray-700 mb-1">Mật khẩu</label>
             <input className="w-full border rounded-lg px-3 py-2" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
           </div>
-          <button disabled={loading} className="w-full py-2 rounded-lg bg-rose-600 text-white hover:bg-rose-700 disabled:opacity-60">{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>
+          <button disabled={loading} className="w-full py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-60">{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>
         </form>
       </div>
     </div>
