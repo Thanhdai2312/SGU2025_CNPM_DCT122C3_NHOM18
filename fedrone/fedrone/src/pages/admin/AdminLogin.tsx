@@ -19,17 +19,20 @@ export default function AdminLogin() {
       // Save admin credentials separately from customer
       localStorage.setItem('adminToken', res.accessToken);
       localStorage.setItem('adminUser', JSON.stringify(res.user));
-      const parsed = res.user as { role?: string };
-  const role = (parsed?.role || '').toLowerCase();
-      const ok = role === 'admin' || role === 'operator';
+    const parsed = res.user as { role?: string };
+    const role = (parsed?.role || '').toLowerCase();
+    const ok = role === 'admin' || role === 'restaurant';
       if (!ok) {
         setError('Tài khoản không có quyền truy cập Admin.');
         localStorage.removeItem('adminToken');
         localStorage.removeItem('adminUser');
         return;
       }
-      const redirectTo = (location.state as any)?.from?.pathname || '/admin';
-      navigate(redirectTo, { replace: true });
+  // Điều hướng mặc định theo role
+  let defaultPath = '/admin';
+  if (role === 'restaurant') defaultPath = '/admin/kitchen';
+  const redirectTo = (location.state as any)?.from?.pathname || defaultPath;
+  navigate(redirectTo, { replace: true });
     } catch (e: any) {
       setError(e?.message || 'Đăng nhập thất bại');
     } finally {

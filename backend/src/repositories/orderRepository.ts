@@ -48,4 +48,20 @@ export const orderRepository = {
         userId: true,
       },
     }),
+  // Danh sách đơn theo nhà hàng dành cho RESTAURANT scope
+  listByRestaurantId: (restaurantId: string) =>
+    prisma.order.findMany({
+      where: { restaurantId },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        createdAt: true,
+        status: true,
+        paymentStatus: true,
+        total: true,
+        shippingFee: true,
+        shippingAddress: true,
+        userId: true,
+      },
+    }),
 };

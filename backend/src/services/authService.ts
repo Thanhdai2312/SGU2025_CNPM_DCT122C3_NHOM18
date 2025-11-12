@@ -16,8 +16,8 @@ export const authService = {
     if (existsPhone) throw Object.assign(new Error('Phone already exists'), { status: 409 });
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await userRepository.create({ name, email, phone, passwordHash, role });
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, { expiresIn: '2h' });
-    return { user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: (user as any).phone as string | undefined }, accessToken: token };
+  const token = jwt.sign({ sub: user.id, role: user.role, workRestaurantId: (user as any).workRestaurantId }, JWT_SECRET, { expiresIn: '2h' });
+  return { user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: (user as any).phone as string | undefined, workRestaurantId: (user as any).workRestaurantId || null }, accessToken: token };
   },
   // Đăng nhập: xác thực email/mật khẩu, trả về JWT
   login: async (email: string, password: string) => {
@@ -25,7 +25,7 @@ export const authService = {
     if (!user) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw Object.assign(new Error('Invalid credentials'), { status: 401 });
-    const token = jwt.sign({ sub: user.id, role: user.role }, JWT_SECRET, { expiresIn: '2h' });
-    return { user: { id: user.id, name: user.name, email: user.email, role: user.role }, accessToken: token };
+    const token = jwt.sign({ sub: user.id, role: user.role, workRestaurantId: (user as any).workRestaurantId }, JWT_SECRET, { expiresIn: '2h' });
+    return { user: { id: user.id, name: user.name, email: user.email, role: user.role, workRestaurantId: (user as any).workRestaurantId || null }, accessToken: token };
   },
 };

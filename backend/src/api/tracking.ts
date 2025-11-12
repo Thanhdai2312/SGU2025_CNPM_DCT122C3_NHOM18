@@ -12,16 +12,16 @@ const router = express.Router();
 // Trả về thông tin theo dõi giao hàng cho 1 đơn hàng
 // - CUSTOMER: chỉ xem đơn hàng của chính mình
 // - ADMIN/OPERATOR: xem bất kỳ đơn hàng nào
-router.get('/:orderId', auth(['CUSTOMER', 'ADMIN', 'OPERATOR']), async (req, res, next) => {
+router.get('/:orderId', auth(['CUSTOMER', 'ADMIN', 'RESTAURANT']), async (req, res, next) => {
   try {
     const { orderId } = req.params;
-    const me = (req as any).user as { id: string; role?: 'CUSTOMER' | 'ADMIN' | 'OPERATOR' };
+  const me = (req as any).user as { id: string; role?: 'CUSTOMER' | 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
 
   const order = await orderRepository.findById(orderId);
     if (!order) return res.status(404).json({ message: 'Order not found' });
 
     // CUSTOMER chỉ được xem đơn của chính mình
-    const isPrivileged = me?.role === 'ADMIN' || me?.role === 'OPERATOR';
+  const isPrivileged = me?.role === 'ADMIN' || (me?.role === 'RESTAURANT' && order.restaurantId === me.workRestaurantId);
     if (!isPrivileged && order.userId !== me?.id) {
       return res.status(403).json({ message: 'Forbidden' });
     }

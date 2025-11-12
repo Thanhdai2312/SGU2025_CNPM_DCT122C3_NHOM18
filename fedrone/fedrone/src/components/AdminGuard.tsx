@@ -10,7 +10,7 @@ export default function AdminGuard({ children }: PropsWithChildren) {
     const u = raw ? JSON.parse(raw) : undefined;
     role = (u?.role || '').toLowerCase();
   } catch {}
-  const allowed = role === 'admin' || role === 'operator';
+  const allowed = role === 'admin' || role === 'restaurant';
   if (!allowed) {
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }

@@ -20,11 +20,17 @@ model User {
   createdAt    DateTime @default(now())
   orders       Order[]
   cart         Cart?
+  // Nhà hàng làm việc (chỉ áp dụng cho nhân viên role RESTAURANT)
+  workRestaurantId String?
+  workRestaurant   Restaurant? @relation("RestaurantStaff", fields: [workRestaurantId], references: [id])
+
+  @@index([role, workRestaurantId])
 }
 
 enum UserRole {
   CUSTOMER
   ADMIN
+  RESTAURANT
 }
 
 model Restaurant {
@@ -37,6 +43,7 @@ model Restaurant {
   orders    Order[]
   drones    Drone[]
   currentDrones Drone[] @relation("CurrentStation")
+  staff     User[]     @relation("RestaurantStaff")
 }
 
 model MenuItem {

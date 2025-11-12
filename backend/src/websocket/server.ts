@@ -15,7 +15,7 @@ export function initWebSocket(httpServer: HttpServer): SocketIOServer {
       const header = (socket.handshake.headers['authorization'] as string) || '';
       const token = (socket.handshake.auth as any)?.token || (header.startsWith('Bearer ') ? header.slice(7) : undefined);
       if (!token) return next(new Error('No token'));
-      const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; role?: 'CUSTOMER' | 'ADMIN' | 'OPERATOR' };
+  const decoded = jwt.verify(token, JWT_SECRET) as { sub: string; role?: 'CUSTOMER' | 'ADMIN' | 'RESTAURANT' };
       (socket.data as any).userId = decoded.sub;
       (socket.data as any).role = decoded.role;
       next();

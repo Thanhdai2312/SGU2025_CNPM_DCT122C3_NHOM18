@@ -22,7 +22,7 @@ export default function OrderTracking() {
 // Trang Theo dõi đơn hàng cho khách
 // - Hiển thị thông tin đơn, địa chỉ, phí ship, tổng tiền
 // - Trạng thái giao hàng và ghi chú từ Bếp được hiển thị ngay trong dòng trạng thái
-// - ETA và vị trí drone (nếu có) giúp khách theo dõi trực quan
+// - ETA và vị trí drone giúp khách theo dõi trực quan
   const { orderId } = useParams();
   const { token } = useAuth();
   const [data, setData] = useState<TrackingResponse | null>(null);
@@ -79,7 +79,7 @@ export default function OrderTracking() {
     return () => { socket.disconnect(); };
   }, [orderId, token]);
 
-  // Đã loại bỏ tính phần trăm tiến độ cùng với thanh tiến trình
+ 
 
   const onCancel = async () => {
     if (!orderId) return;
@@ -166,6 +166,11 @@ export default function OrderTracking() {
 function renderStatusText(status?: string, note?: string | null) {
   const s = String(status || '').toUpperCase();
   switch (s) {
+  // NOTE: Trạng thái đặc biệt "NO_DELIVERY" là giai đoạn ngay sau khi thanh toán thành công
+  // hệ thống CHƯA tạo Delivery (chờ bếp xác nhận/hoàn tất). Ta đổi sang thông điệp thân thiện.
+    case 'NO_DELIVERY':
+    case 'CONFIRMED': // Khi webhook đã xác nhận thanh toán và đơn ở trạng thái CONFIRMED (chưa bếp xử lý)
+      return 'Thanh toán thành công — đang chờ bếp xác nhận.';
     case 'PREPARING':
       // Nếu bếp đã gửi thông điệp cụ thể, ưu tiên hiển thị thông điệp đó
       return note || 'Bếp đang chế biến món ăn của bạn.';

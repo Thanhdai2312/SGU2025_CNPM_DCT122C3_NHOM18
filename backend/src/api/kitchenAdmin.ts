@@ -17,15 +17,18 @@ const asyncHandler = <T extends (req: Request, res: Response, next: NextFunction
 //    Từ lúc này admin mới có thể Dispatch giao hàng cho đơn này.
 
 // Danh sách đơn cho Bếp: các đơn đã thanh toán nhưng chưa hoàn tất bếp (lọc theo restaurantId nếu có)
-router.get('/orders', auth(['ADMIN']), asyncHandler(async (req, res) => {
-  const role = (req as any).user?.role;
-  if (role !== 'ADMIN') return res.status(403).json({ message: 'Forbidden' });
-  const restaurantId = (req.query.restaurantId as string | undefined)?.trim();
+router.get('/orders', auth(['ADMIN','RESTAURANT']), asyncHandler(async (req, res) => {
+  const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+  let restaurantFilter = (req.query.restaurantId as string | undefined)?.trim();
+  if (me.role === 'RESTAURANT') {
+    if (!me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
+    restaurantFilter = me.workRestaurantId; // ép về nhà hàng của nhân viên
+  }
   const orders = await prisma.order.findMany({
     where: {
       paymentStatus: 'PAID' as any,
       status: { in: ['CONFIRMED','PREPARING'] as any },
-      ...(restaurantId ? { restaurantId } : {}),
+      ...(restaurantFilter ? { restaurantId: restaurantFilter } : {}),
     },
     orderBy: { createdAt: 'desc' },
     include: { user: true, orderItems: { include: { menuItem: true } } },
@@ -41,10 +44,12 @@ router.get('/orders', auth(['ADMIN']), asyncHandler(async (req, res) => {
 }));
 
 // Bắt đầu chuẩn bị: set PREPARING, phát thông điệp cho khách
-router.post('/orders/:orderId/start', auth(['ADMIN']), asyncHandler(async (req, res) => {
+router.post('/orders/:orderId/start', auth(['ADMIN','RESTAURANT']), asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return res.status(404).json({ message: 'Order not found' });
+  const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+  if (me.role === 'RESTAURANT' && order.restaurantId !== me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
   if (order.paymentStatus !== 'PAID') return res.status(400).json({ message: 'Order chưa thanh toán' });
   if (order.status !== 'CONFIRMED') return res.status(409).json({ message: 'Chỉ bắt đầu từ trạng thái CONFIRMED' });
   const upd = await prisma.order.update({ where: { id: orderId }, data: { status: 'PREPARING' as any } });
@@ -59,10 +64,12 @@ router.post('/orders/:orderId/start', auth(['ADMIN']), asyncHandler(async (req, 
 }));
 
 // Hoàn tất chuẩn bị: mở giao hàng (tạo delivery QUEUED nếu chưa có), phát thông điệp cho khách
-router.post('/orders/:orderId/complete', auth(['ADMIN']), asyncHandler(async (req, res) => {
+router.post('/orders/:orderId/complete', auth(['ADMIN','RESTAURANT']), asyncHandler(async (req, res) => {
   const { orderId } = req.params;
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return res.status(404).json({ message: 'Order not found' });
+  const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+  if (me.role === 'RESTAURANT' && order.restaurantId !== me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
   if (order.paymentStatus !== 'PAID') return res.status(400).json({ message: 'Order chưa thanh toán' });
   if (!(['CONFIRMED','PREPARING'] as any).includes(order.status)) return res.status(409).json({ message: 'Trạng thái không hợp lệ để hoàn tất bếp' });
 

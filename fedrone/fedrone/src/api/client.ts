@@ -5,7 +5,7 @@ const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export type LoginResponse = {
   accessToken: string;
-  user: { id: string | number; name: string; email: string; role?: string; phone?: string };
+  user: { id: string | number; name: string; email: string; role?: string; phone?: string; workRestaurantId?: string | null };
 };
 
 async function request(path: string, options: RequestInit = {}) {

@@ -8,9 +8,20 @@ import { deliveryWorker } from '../services/deliveryWorker';
 const router = express.Router();
 const service = new DroneService();
 
-router.get('/', auth(['ADMIN', 'OPERATOR']), async (_req, res, next) => {
-  // Danh sách toàn bộ drone (chỉ ADMIN/OPERATOR)
+router.get('/', auth(['ADMIN', 'RESTAURANT']), async (req, res, next) => {
+  // ADMIN: xem tất cả
+  // RESTAURANT: chỉ xem drone thuộc/đang ở nhà hàng của mình
   try {
+    const me = (req as any).user as { role?: 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const rid = me.workRestaurantId;
+      if (!rid) return res.status(403).json({ message: 'Forbidden' });
+      const items = await prisma.drone.findMany({
+        where: { OR: [{ homeStationId: rid }, { currentStationId: rid }] },
+        include: { homeStation: { select: { id: true, name: true } }, currentStation: { select: { id: true, name: true } } },
+      });
+      return res.json(items);
+    }
     const items = await service.list();
     res.json(items);
   } catch (e) {
@@ -74,7 +85,7 @@ router.patch('/:id', auth(['ADMIN']), async (req, res, next) => {
   }
 });
 
-router.post('/assign', auth(['OPERATOR', 'ADMIN']), async (req, res, next) => {
+router.post('/assign', auth(['ADMIN']), async (req, res, next) => {
   // Gán drone cho đơn hàng dựa trên nhu cầu tải/trọng lượng/tầm với (OPERATOR/ADMIN)
   try {
     const schema = z.object({

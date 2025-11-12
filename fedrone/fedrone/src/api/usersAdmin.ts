@@ -9,7 +9,7 @@ export type AdminUser = {
   name: string;
   email: string;
   phone?: string | null;
-  role: 'ADMIN' | 'CUSTOMER';
+  role: 'ADMIN' | 'CUSTOMER' | 'RESTAURANT';
   createdAt: string;
 };
 
@@ -34,10 +34,10 @@ async function request(path: string, options: RequestInit = {}) {
 }
 
 export const usersAdminApi = {
-  async stats(): Promise<{ admins: number; customers: number }> {
+  async stats(): Promise<{ admins: number; customers: number; restaurants: number }> {
     return request('/api/admin/users/stats');
   },
-  async list(params: { search?: string; role?: 'ADMIN' | 'CUSTOMER' } = {}): Promise<AdminUser[]> {
+  async list(params: { search?: string; role?: 'ADMIN' | 'CUSTOMER' | 'RESTAURANT' } = {}): Promise<AdminUser[]> {
     const q = new URLSearchParams();
     if (params.search) q.set('search', params.search);
     if (params.role) q.set('role', params.role);

@@ -9,9 +9,16 @@ const repo = new DeliveryRepository();
 const droneSvc = new DroneService();
 
 // Danh sách deliveries (chỉ ADMIN/OPERATOR), có thể lọc theo orderId
-router.get('/', auth(['ADMIN', 'OPERATOR']), async (req, res, next) => {
+router.get('/', auth(['ADMIN', 'RESTAURANT']), async (req, res, next) => {
   try {
     const orderId = req.query.orderId as string | undefined;
+    const me = (req as any).user as { role?: 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const rid = me.workRestaurantId;
+      if (!rid) return res.status(403).json({ message: 'Forbidden' });
+      const items = await (repo as any).list({ orderId, restaurantId: rid });
+      return res.json(items);
+    }
     const items = await repo.list({ orderId });
     res.json(items);
   } catch (e) {
@@ -19,7 +26,7 @@ router.get('/', auth(['ADMIN', 'OPERATOR']), async (req, res, next) => {
   }
 });
 
-router.get('/:id', auth(['ADMIN', 'OPERATOR', 'CUSTOMER']), async (req, res, next) => {
+router.get('/:id', auth(['ADMIN', 'RESTAURANT', 'CUSTOMER']), async (req, res, next) => {
   // Lấy chi tiết 1 delivery cụ thể. CUSTOMER chỉ có thể truy cập nếu thuộc đơn của mình
   try {
     const item = await repo.getById(req.params.id);
@@ -30,7 +37,7 @@ router.get('/:id', auth(['ADMIN', 'OPERATOR', 'CUSTOMER']), async (req, res, nex
   }
 });
 
-router.post('/:id/status', auth(['OPERATOR', 'ADMIN']), async (req, res, next) => {
+router.post('/:id/status', auth(['ADMIN']), async (req, res, next) => {
   // Cập nhật trạng thái delivery thủ công (chỉ OPERATOR/ADMIN). Chủ yếu dùng để điều khiển trong demo/admin.
   try {
     const schema = z.object({ status: z.enum(['QUEUED', 'ASSIGNED', 'EN_ROUTE', 'ARRIVED', 'COMPLETED', 'FAILED']) });
@@ -43,7 +50,7 @@ router.post('/:id/status', auth(['OPERATOR', 'ADMIN']), async (req, res, next) =
 });
 
 // Mô phỏng hoàn tất giao hàng: đặt status = COMPLETED và set completedAt (demo/testing)
-router.post('/:id/simulate-complete', auth(['OPERATOR', 'ADMIN']), async (req, res, next) => {
+router.post('/:id/simulate-complete', auth(['ADMIN']), async (req, res, next) => {
   try {
     const current = await repo.getById(req.params.id);
     if (!current) return res.status(404).json({ message: 'Not found' });
@@ -55,7 +62,7 @@ router.post('/:id/simulate-complete', auth(['OPERATOR', 'ADMIN']), async (req, r
 });
 
 // Admin dispatch: chọn drone và bắt đầu hành trình (set ASSIGNED; worker sẽ chuyển EN_ROUTE và cập nhật tiến độ)
-router.post('/:id/dispatch', auth(['OPERATOR', 'ADMIN']), async (req, res, next) => {
+router.post('/:id/dispatch', auth(['ADMIN']), async (req, res, next) => {
   try {
     const result = await droneSvc.dispatchDelivery(req.params.id);
     res.json(result.delivery);

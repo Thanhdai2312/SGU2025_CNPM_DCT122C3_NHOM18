@@ -6,18 +6,31 @@ import { prisma } from '../repositories/db';
 const router = express.Router();
 
 // Liệt kê toàn bộ món của 1 nhà hàng (ADMIN)
-router.get('/:restaurantId', auth(['ADMIN']), async (req, res, next) => {
+router.get('/:restaurantId', auth(['ADMIN','RESTAURANT']), async (req, res, next) => {
   try {
-    const { restaurantId } = req.params;
+    const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+    let { restaurantId } = req.params as { restaurantId: string };
+    if (me.role === 'RESTAURANT') {
+      if (!me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
+      if (restaurantId !== me.workRestaurantId) {
+        // ép về nhà hàng của nhân viên, tránh truy cập chéo
+        restaurantId = me.workRestaurantId;
+      }
+    }
     const items = await prisma.menuItem.findMany({ where: { restaurantId }, orderBy: { name: 'asc' } });
     res.json(items);
   } catch (e) { next(e); }
 });
 
 // Tạo món mới
-router.post('/:restaurantId', auth(['ADMIN']), async (req, res, next) => {
+router.post('/:restaurantId', auth(['ADMIN','RESTAURANT']), async (req, res, next) => {
   try {
-    const { restaurantId } = req.params;
+    const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+    let { restaurantId } = req.params as { restaurantId: string };
+    if (me.role === 'RESTAURANT') {
+      if (!me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
+      restaurantId = me.workRestaurantId;
+    }
     const schema = z.object({
       name: z.string().min(1),
       price: z.number().positive(),
@@ -34,7 +47,7 @@ router.post('/:restaurantId', auth(['ADMIN']), async (req, res, next) => {
 });
 
 // Cập nhật món
-router.patch('/item/:id', auth(['ADMIN']), async (req, res, next) => {
+router.patch('/item/:id', auth(['ADMIN','RESTAURANT']), async (req, res, next) => {
   try {
     const schema = z.object({
       name: z.string().min(1).optional(),
@@ -46,14 +59,25 @@ router.patch('/item/:id', auth(['ADMIN']), async (req, res, next) => {
       stock: z.number().int().min(0).nullable().optional(),
     });
     const data = schema.parse(req.body);
+    // Nếu RESTAURANT, kiểm tra món thuộc nhà hàng mình
+    const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const item = await prisma.menuItem.findUnique({ where: { id: req.params.id }, select: { restaurantId: true } });
+      if (!item || item.restaurantId !== me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
+    }
     const updated = await prisma.menuItem.update({ where: { id: req.params.id }, data: data as any });
     res.json(updated);
   } catch (e) { next(e); }
 });
 
 // Xoá món
-router.delete('/item/:id', auth(['ADMIN']), async (req, res, next) => {
+router.delete('/item/:id', auth(['ADMIN','RESTAURANT']), async (req, res, next) => {
   try {
+    const me = (req as any).user as { role?: 'ADMIN'|'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const item = await prisma.menuItem.findUnique({ where: { id: req.params.id }, select: { restaurantId: true } });
+      if (!item || item.restaurantId !== me.workRestaurantId) return res.status(403).json({ message: 'Forbidden' });
+    }
     await prisma.menuItem.delete({ where: { id: req.params.id } });
     res.json({ ok: true });
   } catch (e) { next(e); }

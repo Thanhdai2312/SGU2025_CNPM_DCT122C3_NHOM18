@@ -14,7 +14,7 @@ const asyncHandler = <T extends (req: Request, res: Response, next: NextFunction
 
 // Liệt kê người dùng, hỗ trợ tìm kiếm theo tên/email và lọc theo vai trò
 router.get('/', auth(['ADMIN']), asyncHandler(async (req, res) => {
-  const schema = z.object({ search: z.string().optional(), role: z.enum(['ADMIN','CUSTOMER']).optional() });
+  const schema = z.object({ search: z.string().optional(), role: z.enum(['ADMIN','CUSTOMER','RESTAURANT']).optional() });
   const parsed = schema.safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ message: 'Invalid query' });
   const { search, role } = parsed.data;
@@ -26,6 +26,25 @@ router.get('/', auth(['ADMIN']), asyncHandler(async (req, res) => {
 router.get('/stats', auth(['ADMIN']), asyncHandler(async (_req, res) => {
   const counts = await userRepository.countsByRole();
   res.json(counts);
+}));
+
+// Tạo nhân viên nhà hàng (ADMIN)
+router.post('/staff', auth(['ADMIN']), asyncHandler(async (req, res) => {
+  const schema = z.object({
+    name: z.string().min(1),
+    email: z.string().email(),
+    phone: z.string().optional(),
+    password: z.string().min(6),
+    restaurantId: z.string().min(1),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ message: 'Invalid input', issues: parsed.error.issues });
+  const { name, email, phone, password, restaurantId } = parsed.data;
+  // Hash mật khẩu rồi tạo user RESTAURANT
+  const bcrypt = await import('bcryptjs');
+  const passwordHash = await bcrypt.hash(password, 10);
+  const user = await userRepository.createStaff({ name, email, phone: phone ?? null, passwordHash, restaurantId });
+  res.status(201).json({ id: user.id, name: user.name, email: user.email, role: user.role, workRestaurantId: (user as any).workRestaurantId });
 }));
 
 // Xoá người dùng theo id (cascade): xoá cart, đơn liên quan theo logic repo
