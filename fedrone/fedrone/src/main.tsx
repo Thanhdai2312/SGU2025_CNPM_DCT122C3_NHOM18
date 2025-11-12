@@ -25,6 +25,11 @@ import AdminOrderDetail from './pages/admin/AdminOrderDetail.tsx';
 import AdminProducts from './pages/admin/AdminProducts.tsx';
 import AdminKitchen from './pages/admin/AdminKitchen.tsx';
 import AdminUsers from './pages/admin/AdminUsers.tsx';
+import RestaurantLogin from './pages/restaurant/RestaurantLogin.tsx';
+import RestaurantGuard from './components/RestaurantGuard.tsx';
+import RestaurantLayout from './pages/restaurant/RestaurantLayout.tsx';
+import RestaurantDrones from './pages/restaurant/RestaurantDrones.tsx';
+import RestaurantStats from './pages/restaurant/RestaurantStats.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -53,6 +58,15 @@ createRoot(document.getElementById('root')!).render(
             <Route path="products" element={<AdminProducts />} />
             <Route path="kitchen" element={<AdminKitchen />} />
             <Route path="users" element={<AdminUsers />} />
+          </Route>
+          {/* Restaurant namespace - separate layout */}
+          <Route path="/restaurant/login" element={<RestaurantLogin />} />
+          <Route path="/restaurant" element={<RestaurantGuard><RestaurantLayout /></RestaurantGuard>}>
+            <Route index element={<RestaurantStats />} />
+            <Route path="stats" element={<RestaurantStats />} />
+            <Route path="kitchen" element={<AdminKitchen />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="drones" element={<RestaurantDrones />} />
           </Route>
         </Routes>
       </AuthProvider>

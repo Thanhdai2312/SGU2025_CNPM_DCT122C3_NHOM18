@@ -80,4 +80,12 @@ export const droneApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+  async recallToMe(id: string, tokenOverride?: string): Promise<{ message: string }> {
+    const res = await fetch(`${API_BASE}/api/drone/${id}/recall-to-me`, {
+      method: 'POST',
+      headers: adminAuthHeaders(tokenOverride),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
 };
