@@ -35,6 +35,7 @@ export default function Cart() {
       try {
         const c = await cartApi.get();
         setCart(c);
+  // Đã bỏ đồng bộ huy hiệu giỏ hàng trên Header
         // lấy tình trạng drone tổng quan
         const a = await droneApi.availability();
         setAvailability(a);
@@ -47,6 +48,7 @@ export default function Cart() {
     try {
       const c = await cartApi.updateQty(menuItemId, qty);
       setCart(c);
+      // Đã bỏ huy hiệu số lượng giỏ hàng
     } catch (e) { console.error(e); }
   };
 

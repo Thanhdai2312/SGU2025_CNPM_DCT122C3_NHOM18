@@ -1,8 +1,9 @@
-// API client Drone cho Admin/Operator
-// - list(): danh sách drone với thông tin trạm
+// API client Drone cho Admin/Nhà hàng
+// - list(): danh sách drone với thông tin trạm (ADMIN xem tất cả, RESTAURANT chỉ xem của chi nhánh mình)
 // - availability(): thống kê nhanh số drone AVAILABLE và tải trọng tối đa
-// - create()/update(): quản lý drone; hỗ trợ homeStationId/currentStationId (chọn từ combobox)
-// - returnHome(): yêu cầu worker đưa drone về trạm sở hữu
+// - create()/update(): quản lý drone (ADMIN); hỗ trợ homeStationId/currentStationId (chọn từ combobox)
+// - returnHome(): ADMIN yêu cầu worker đưa drone về trạm sở hữu
+// - recallToMe(): RESTAURANT yêu cầu gọi drone về chi nhánh của mình
 import { API_BASE } from './client';
 
 export type Drone = {
@@ -74,6 +75,15 @@ export const droneApi = {
   },
   async returnHome(id: string, tokenOverride?: string): Promise<Drone> {
     const res = await fetch(`${API_BASE}/api/drone/${id}/return-home`, {
+      method: 'POST',
+      headers: adminAuthHeaders(tokenOverride),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
+  async recallToMe(id: string, tokenOverride?: string): Promise<{ message: string }> {
+    // RESTAURANT gọi drone về chi nhánh của mình
+    const res = await fetch(`${API_BASE}/api/drone/${id}/recall-to-me`, {
       method: 'POST',
       headers: adminAuthHeaders(tokenOverride),
     });

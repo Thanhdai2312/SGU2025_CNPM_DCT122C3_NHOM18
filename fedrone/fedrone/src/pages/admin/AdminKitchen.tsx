@@ -1,11 +1,14 @@
-// Trang Bếp chi nhánh (Admin)
-// - Lọc theo chi nhánh (selector), danh sách đơn đã thanh toán
-// - Bắt đầu chuẩn bị (PREPARING) và Hoàn tất (kitchenDone=true)
+// Trang Bếp chi nhánh (Admin + Restaurant)
+// - ADMIN: Có combobox chọn chi nhánh để xem đơn đang chờ bếp
+// - RESTAURANT: Tự động cố định vào workRestaurantId, ẩn combobox và chỉ xem đơn của nhà hàng mình
+// - Chức năng: Bắt đầu chuẩn bị (set PREPARING) → Hoàn tất (kitchenDone=true, tạo delivery QUEUED nếu chưa có)
 // - Sau khi Hoàn tất, Admin mới có thể Dispatch ở màn giao hàng
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { kitchenAdminApi, type KitchenOrder } from '../../api/kitchenAdmin';
 import { CheckCircle2, Timer, User, Coffee } from 'lucide-react';
 import { restaurantsApi, type Restaurant } from '../../api/restaurants';
+import { getActiveAdminArea } from '../../utils/adminAuth';
+import { useRestaurantName } from '../../hooks/useRestaurantName';
 
 export default function AdminKitchen() {
   const [items, setItems] = useState<KitchenOrder[]>([]);
@@ -13,6 +16,11 @@ export default function AdminKitchen() {
   const [error, setError] = useState<string | null>(null);
   const [branches, setBranches] = useState<Restaurant[]>([]);
   const [branchId, setBranchId] = useState<string>(() => localStorage.getItem('adminKitchenBranchId') || '');
+
+  const { role, session } = useMemo(() => getActiveAdminArea(), []); // Lấy thông tin phiên hiện tại (admin hoặc restaurant)
+  const isRestaurant = role === 'restaurant';
+  const workRestaurantId = (session?.user as any)?.workRestaurantId as string | undefined;
+  const { name: myRestaurantName } = useRestaurantName(workRestaurantId);
 
   const load = async (restaurantId?: string) => {
     try {
@@ -27,6 +35,15 @@ export default function AdminKitchen() {
   useEffect(() => {
     (async () => {
       try {
+        if (isRestaurant) {
+          if (workRestaurantId) {
+            setBranchId(workRestaurantId);
+            await load(workRestaurantId);
+          } else {
+            setError('Không xác định được nhà hàng làm việc của bạn');
+          }
+          return;
+        }
         const rs = await restaurantsApi.list();
         setBranches(rs);
         if (!branchId && rs[0]?.id) {
@@ -50,25 +67,33 @@ export default function AdminKitchen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [branchId]);
 
+  // Bắt đầu chế biến đơn (chuyển status CONFIRMED -> PREPARING)
   const onStart = async (id: string) => { try { await kitchenAdminApi.start(id); await load(branchId || undefined); } catch (e:any){ alert(e?.message || 'Không thể cập nhật'); } };
+  // Hoàn tất chế biến (đánh dấu kitchenDone, tạo delivery nếu chưa có)
   const onComplete = async (id: string) => { try { await kitchenAdminApi.complete(id); await load(branchId || undefined); } catch (e:any){ alert(e?.message || 'Không thể cập nhật'); } };
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Bếp chi nhánh</h2>
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Chi nhánh:</label>
-          <select
-            className="px-3 py-1.5 rounded-lg border border-amber-200 bg-white"
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-          >
-            {branches.map(b => (
-              <option key={b.id} value={b.id}>{b.name}</option>
-            ))}
-          </select>
-        </div>
+        {!isRestaurant ? (
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Chi nhánh:</label>
+            <select
+              className="px-3 py-1.5 rounded-lg border border-amber-200 bg-white"
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+            >
+              {branches.map(b => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+          </div>
+        ) : (
+          <div className="px-3 py-1.5 rounded-lg border border-amber-200 bg-white text-sm text-gray-700" title={myRestaurantName || ''}>
+            {myRestaurantName || 'Nhà hàng của tôi'}
+          </div>
+        )}
       </div>
       {error && <div className="mb-3 text-amber-800 bg-amber-50 border border-amber-200 rounded p-2">{error}</div>}
 

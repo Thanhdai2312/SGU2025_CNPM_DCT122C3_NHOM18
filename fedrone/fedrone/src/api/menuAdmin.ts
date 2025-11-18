@@ -4,6 +4,7 @@
 // - update(): cập nhật món
 // - remove(): xoá món
 import { API_BASE } from './client';
+import { getActiveAdminArea } from '../utils/adminAuth';
 
 export type MenuItemAdmin = {
   id: string;
@@ -20,7 +21,9 @@ export type MenuItemAdmin = {
 type UpsertInput = Partial<MenuItemAdmin> & { name?: string; price?: number };
 
 function adminHeaders(tokenOverride?: string): HeadersInit {
-  const token = tokenOverride || localStorage.getItem('adminToken');
+  if (tokenOverride) return { Authorization: `Bearer ${tokenOverride}`, 'Content-Type': 'application/json' };
+  const { session } = getActiveAdminArea();
+  const token = session?.token || localStorage.getItem('adminToken');
   return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
 }
 

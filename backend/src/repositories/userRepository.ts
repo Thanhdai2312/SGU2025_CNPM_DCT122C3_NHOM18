@@ -26,12 +26,16 @@ export const userRepository = {
   },
   // Đếm số lượng theo vai trò để hiển thị dashboard
   countsByRole: async () => {
-    const [admins, customers] = await Promise.all([
-      prisma.user.count({ where: { role: 'ADMIN' } }),
-      prisma.user.count({ where: { role: 'CUSTOMER' } }),
+    const [admins, customers, restaurants] = await Promise.all([
+      prisma.user.count({ where: { role: { equals: 'ADMIN' as UserRole } } }),
+      prisma.user.count({ where: { role: { equals: 'CUSTOMER' as UserRole } } }),
+      prisma.user.count({ where: { role: { equals: 'RESTAURANT' as UserRole } } }),
     ]);
-    return { admins, customers };
+    return { admins, customers, restaurants };
   },
+  // Tạo nhân viên nhà hàng (RESTARUANT) gán vào 1 nhà hàng
+  createStaff: (params: { name: string; email: string; phone?: string | null; passwordHash: string; restaurantId: string }) =>
+    prisma.user.create({ data: { name: params.name, email: params.email, passwordHash: params.passwordHash, role: 'RESTAURANT' as any, phone: params.phone ?? null, workRestaurantId: params.restaurantId } as any }),
   // Xoá toàn bộ dữ liệu liên quan và cuối cùng xoá user (transactional)
   removeByIdCascade: async (userId: string) => {
     // Xoá toàn bộ dữ liệu phụ thuộc trước rồi xoá user

@@ -12,6 +12,7 @@ export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
+  // Đã bỏ huy hiệu số lượng trên icon giỏ hàng theo yêu cầu
 
   const onLogout = () => {
     logout();
@@ -19,6 +20,7 @@ export default function App() {
   };
   useEffect(() => {
     try {
+      // Khởi tạo trạng thái theo dõi đơn từ localStorage
       const id = localStorage.getItem('lastPaidOrderId');
       setActiveOrderId(id);
       const onStorage = () => {
@@ -30,9 +32,12 @@ export default function App() {
     } catch {}
   }, []);
 
+  // Không còn đồng bộ huy hiệu giỏ hàng theo user
+
   // Cập nhật lại khi đổi route (sự kiện storage không kích hoạt trong cùng 1 tab)
   useEffect(() => {
     try {
+      // Cập nhật lại mỗi khi chuyển route (storage event không kích hoạt trong cùng tab)
       const id = localStorage.getItem('lastPaidOrderId');
       setActiveOrderId(id);
     } catch {}

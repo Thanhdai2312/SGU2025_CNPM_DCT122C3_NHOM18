@@ -89,15 +89,22 @@ export default function RestaurantDetail() {
       const menuItem = menu.find(m => m.id === menuItemId);
       const stock = (menuItem as any)?.stock;
       if (typeof stock === 'number' && qty >= stock) {
-        // Hiển thị toast thân thiện cho người dùng
+  // Hiển thị cảnh báo nếu vượt tồn kho
         setToast({ message: `❗ Món "${menuItem?.name || ''}" chỉ còn ${stock} phần trong kho, bạn đã chọn vượt quá giới hạn`, tone: 'error', variant: 'panel' });
         window.setTimeout(() => setToast(null), 3500);
         return;
       }
-      await cartApi.addOne(menuItemId);
+  // Thêm 1 đơn vị món vào giỏ và nhận lại giỏ mới từ server
+  await cartApi.addOne(menuItemId);
+  // Đã bỏ huy hiệu số lượng giỏ hàng trên Header
+  // Toast xác nhận đã thêm thành công
+      setToast({ message: `✅ Đã thêm "${menuItem?.name || ''}" vào giỏ`, tone: 'success', variant: 'toast' });
+      window.setTimeout(() => setToast(null), 2500);
     } catch (e) {
-      // Không chặn luồng; tuỳ chọn có thể hiển thị thông báo nhỏ sau
+  // Không chặn luồng tổng thể; ghi log để dev kiểm tra nếu cần
       console.error(e);
+      setToast({ message: '⚠️ Không thể thêm vào giỏ, thử lại sau', tone: 'error', variant: 'toast' });
+      window.setTimeout(() => setToast(null), 2500);
     }
   };
 

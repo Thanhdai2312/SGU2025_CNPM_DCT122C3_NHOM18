@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 // - Hỗ trợ trường ảnh, tồn kho, loại món
 import { menuAdminApi, type MenuItemAdmin } from '../../api/menuAdmin';
 import { restaurantsApi, type Restaurant } from '../../api/restaurants';
+import { getActiveAdminArea } from '../../utils/adminAuth';
+import { useRestaurantName } from '../../hooks/useRestaurantName';
 import { Plus, Save, Trash2, RefreshCw } from 'lucide-react';
 
 export default function AdminProducts() {
@@ -19,24 +21,40 @@ export default function AdminProducts() {
     try { return localStorage.getItem('adminToken') || undefined; } catch { return undefined; }
   }, []);
 
+  // Xác định khu vực đang hoạt động (admin hay restaurant) để ép phạm vi nhà hàng nếu là restaurant
+  const { role, session } = useMemo(() => getActiveAdminArea(), []);
+  const isRestaurant = role === 'restaurant';
+  const workRestaurantId = (session?.user as any)?.workRestaurantId as string | undefined;
+  const { name: myRestaurantName } = useRestaurantName(workRestaurantId);
+
   const loadRestaurants = async () => {
+    if (isRestaurant) return; // Người dùng nhà hàng không cần danh sách combobox chi nhánh
     const list = await restaurantsApi.list();
     setRestaurants(list);
     if (!restaurantId && list.length) setRestaurantId(list[0].id);
   };
   const loadItems = async () => {
-    if (!restaurantId) return;
+  // Chế độ restaurant: luôn ép về workRestaurantId của user
+    const rid = isRestaurant ? (workRestaurantId || '') : restaurantId;
+    if (!rid) return;
     setLoading(true); setError(null);
     try {
-      const list = await menuAdminApi.list(restaurantId, adminToken);
+      const list = await menuAdminApi.list(rid, adminToken);
       setItems(list);
     } catch (e: any) {
       setError(e?.message || 'Không tải được sản phẩm');
     } finally { setLoading(false); }
   };
 
-  useEffect(() => { void loadRestaurants(); }, []);
-  useEffect(() => { void loadItems(); }, [restaurantId]);
+  useEffect(() => {
+  // Khởi tạo restaurantId cho người dùng nhà hàng (ẩn combobox chọn chi nhánh)
+    if (isRestaurant && workRestaurantId) {
+      setRestaurantId(workRestaurantId);
+    }
+    void loadRestaurants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => { void loadItems(); }, [restaurantId, isRestaurant, workRestaurantId]);
 
   const onCreate = () => { setForm({ name: '', price: 0, type: 'FOOD', isAvailable: true, stock: 100 }); setShowForm(true); };
   const onEdit = (m: MenuItemAdmin) => { setForm({ ...m }); setShowForm(true); };
@@ -59,10 +77,16 @@ export default function AdminProducts() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">Quản lý Sản phẩm</h2>
-        <div className="flex gap-2">
-          <select value={restaurantId} onChange={e => setRestaurantId(e.target.value)} className="px-3 py-1.5 border rounded">
-            {restaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+        <div className="flex gap-2 items-center">
+          {!isRestaurant ? (
+            <select value={restaurantId} onChange={e => setRestaurantId(e.target.value)} className="px-3 py-1.5 border rounded">
+              {restaurants.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+            </select>
+          ) : (
+            <div className="px-3 py-1.5 border rounded bg-white text-gray-700 text-sm" title={myRestaurantName || ''}>
+              {myRestaurantName || 'Nhà hàng của tôi'}
+            </div>
+          )}
           <button onClick={() => void loadItems()} className="px-3 py-1.5 rounded bg-gray-100 hover:bg-gray-200 text-gray-700 inline-flex items-center gap-1"><RefreshCw className="w-4 h-4"/>Tải lại</button>
           <button onClick={onCreate} className="px-3 py-1.5 rounded bg-emerald-600 hover:bg-emerald-500 text-white inline-flex items-center gap-1"><Plus className="w-4 h-4"/>Thêm sản phẩm</button>
         </div>

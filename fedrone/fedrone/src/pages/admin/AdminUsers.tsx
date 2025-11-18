@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usersAdminApi, type AdminUser } from '../../api/usersAdmin';
-import { Trash2, UserCog, Search, ShieldCheck, Phone, Calendar } from 'lucide-react';
+import { Trash2, UserCog, Search, ShieldCheck, Phone, Calendar, Utensils } from 'lucide-react';
 
 // Trang Người dùng (Admin)
 // - Tìm kiếm, lọc theo vai trò, xoá người dùng
 export default function AdminUsers() {
-  const [stats, setStats] = useState<{ admins: number; customers: number } | null>(null);
+  const [stats, setStats] = useState<{ admins: number; customers: number; restaurants: number } | null>(null);
   const [list, setList] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState<'ALL' | 'ADMIN' | 'CUSTOMER'>('ALL');
+  const [role, setRole] = useState<'ALL' | 'ADMIN' | 'CUSTOMER' | 'RESTAURANT'>('ALL');
 
   const adminId = useMemo(() => {
     try { return JSON.parse(localStorage.getItem('adminUser') || '{}')?.id as string | undefined; } catch { return undefined; }
@@ -60,7 +60,7 @@ export default function AdminUsers() {
       </div>
 
   {/* Thẻ thống kê lớn */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard
           title="Quản trị viên"
           value={stats ? stats.admins : '—'}
@@ -74,6 +74,13 @@ export default function AdminUsers() {
           tone="sky"
           icon={<UserCog className="w-6 h-6 text-sky-700" />}
           desc="Số lượng tài khoản CUSTOMER"
+        />
+        <StatCard
+          title="Nhà hàng"
+          value={stats ? stats.restaurants : '—'}
+          tone="emerald"
+          icon={<Utensils className="w-6 h-6 text-emerald-700" />}
+          desc="Số lượng tài khoản RESTAURANT"
         />
       </div>
 
@@ -92,6 +99,7 @@ export default function AdminUsers() {
           <option value="ALL">Tất cả vai trò</option>
           <option value="ADMIN">Chỉ ADMIN</option>
           <option value="CUSTOMER">Chỉ CUSTOMER</option>
+          <option value="RESTAURANT">Chỉ RESTAURANT</option>
         </select>
       </div>
 
@@ -147,10 +155,12 @@ export default function AdminUsers() {
   );
 }
 
-function StatCard({ title, value, desc, icon, tone }: { title: string; value: number | string; desc?: string; icon?: React.ReactNode; tone: 'rose' | 'sky' }) {
+function StatCard({ title, value, desc, icon, tone }: { title: string; value: number | string; desc?: string; icon?: React.ReactNode; tone: 'rose' | 'sky' | 'emerald' }) {
   const styles = tone === 'rose'
     ? { ring: 'ring-rose-100', header: 'from-rose-50 to-white text-rose-800', accent: 'text-rose-700' }
-    : { ring: 'ring-sky-100', header: 'from-sky-50 to-white text-sky-800', accent: 'text-sky-700' };
+    : tone === 'sky'
+    ? { ring: 'ring-sky-100', header: 'from-sky-50 to-white text-sky-800', accent: 'text-sky-700' }
+    : { ring: 'ring-emerald-100', header: 'from-emerald-50 to-white text-emerald-800', accent: 'text-emerald-700' };
   return (
     <div className={`bg-white rounded-xl shadow ring-1 ${styles.ring} overflow-hidden`}>
       <div className={`px-4 py-3 font-semibold border-b bg-gradient-to-r ${styles.header}`}>{title}</div>
@@ -165,21 +175,25 @@ function StatCard({ title, value, desc, icon, tone }: { title: string; value: nu
   );
 }
 
-function RoleBadge({ role }: { role: 'ADMIN' | 'CUSTOMER' }) {
-  const isAdmin = role === 'ADMIN';
+function RoleBadge({ role }: { role: 'ADMIN' | 'CUSTOMER' | 'RESTAURANT' }) {
+  const styles = role === 'ADMIN'
+    ? 'bg-rose-50 text-rose-700 border-rose-200'
+    : role === 'CUSTOMER'
+    ? 'bg-sky-50 text-sky-700 border-sky-200'
+    : 'bg-emerald-50 text-emerald-700 border-emerald-200';
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${isAdmin? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-sky-50 text-sky-700 border-sky-200'}`}>
-      {isAdmin ? 'ADMIN' : 'CUSTOMER'}
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${styles}`}>
+      {role}
     </span>
   );
 }
 
-function Avatar({ name, role }: { name: string; role: 'ADMIN' | 'CUSTOMER' }) {
+function Avatar({ name, role }: { name: string; role: 'ADMIN' | 'CUSTOMER' | 'RESTAURANT' }) {
   const initials = (name || '?').split(' ').map(s => s[0]).join('').slice(0,2).toUpperCase();
-  const isAdmin = role === 'ADMIN';
-  return (
-    <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold ${isAdmin? 'bg-rose-100 text-rose-700' : 'bg-sky-100 text-sky-700'}`}>
-      {initials}
-    </div>
-  );
+  const styles = role === 'ADMIN'
+    ? 'bg-rose-100 text-rose-700'
+    : role === 'CUSTOMER'
+    ? 'bg-sky-100 text-sky-700'
+    : 'bg-emerald-100 text-emerald-700';
+  return <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold ${styles}`}>{initials}</div>;
 }

@@ -7,7 +7,7 @@ import { ioInstance } from '../websocket/server';
 const router = express.Router();
 
 // GET /api/orders/mine - liệt kê đơn hàng của chính người dùng (yêu cầu đăng nhập)
-router.get('/mine', auth(['CUSTOMER', 'ADMIN', 'OPERATOR']), async (req, res, next) => {
+router.get('/mine', auth(['CUSTOMER', 'ADMIN', 'RESTAURANT']), async (req, res, next) => {
   try {
     const me = (req as any).user as { id: string };
     const items = await orderRepository.listByUser(me.id);
@@ -16,8 +16,15 @@ router.get('/mine', auth(['CUSTOMER', 'ADMIN', 'OPERATOR']), async (req, res, ne
 });
 
 // GET /api/orders - liệt kê tất cả đơn hàng (ADMIN/OPERATOR)
-router.get('/', auth(['ADMIN', 'OPERATOR']), async (_req, res, next) => {
+router.get('/', auth(['ADMIN', 'RESTAURANT']), async (req, res, next) => {
   try {
+    const me = (req as any).user as { role?: 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const rid = me.workRestaurantId;
+      if (!rid) return res.status(403).json({ message: 'Forbidden' });
+      const items = await (orderRepository as any).listByRestaurantId?.(rid) ?? [];
+      return res.json(items);
+    }
     const items = await orderRepository.listAll();
     res.json(items);
   } catch (e) { next(e); }

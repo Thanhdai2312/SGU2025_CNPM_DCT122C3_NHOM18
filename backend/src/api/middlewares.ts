@@ -13,8 +13,8 @@ export function auth(requiredRoles?: string[]) {
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : undefined;
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
     try {
-  const payload = jwt.verify(token, JWT_SECRET) as { sub: string; role?: 'CUSTOMER' | 'ADMIN' | 'OPERATOR' };
-  (req as unknown as Request & { user: { id: string; role?: 'CUSTOMER' | 'ADMIN' | 'OPERATOR' } }).user = { id: payload.sub, role: payload.role };
+      const payload = jwt.verify(token, JWT_SECRET) as { sub: string; role?: 'CUSTOMER' | 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
+      (req as unknown as Request & { user: { id: string; role?: 'CUSTOMER' | 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string } }).user = { id: payload.sub, role: payload.role, workRestaurantId: (payload as any).workRestaurantId };
       if (requiredRoles && requiredRoles.length && (!payload.role || !requiredRoles.includes(payload.role))) {
         return res.status(403).json({ message: 'Forbidden' });
       }

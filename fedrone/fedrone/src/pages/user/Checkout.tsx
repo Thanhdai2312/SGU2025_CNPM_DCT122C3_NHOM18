@@ -297,8 +297,9 @@ export default function Checkout() {
                       await paymentApi.sendWebhook(mc.body, mc.signature);
                       setPaid(true);
                       try { localStorage.setItem('lastPaidOrderId', result.orderId); } catch {}
-                      // clear cart then navigate tracking
+                      // Xoá giỏ hàng sau khi thanh toán thành công để tránh mua trùng
                       await cartApi.setItems([]);
+                      // Đã bỏ huy hiệu số lượng giỏ hàng nên không cần reset/sự kiện
                       navigate(`/orders/${result.orderId}`);
                     } catch (e: any) {
                       setError(e.message || 'Thanh toán mô phỏng thất bại');

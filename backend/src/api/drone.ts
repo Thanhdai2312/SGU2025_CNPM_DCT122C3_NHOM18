@@ -8,9 +8,20 @@ import { deliveryWorker } from '../services/deliveryWorker';
 const router = express.Router();
 const service = new DroneService();
 
-router.get('/', auth(['ADMIN', 'OPERATOR']), async (_req, res, next) => {
-  // Danh sách toàn bộ drone (chỉ ADMIN/OPERATOR)
+router.get('/', auth(['ADMIN', 'RESTAURANT']), async (req, res, next) => {
+  // ADMIN: xem tất cả
+  // RESTAURANT: chỉ xem drone thuộc/đang ở nhà hàng của mình
   try {
+    const me = (req as any).user as { role?: 'ADMIN' | 'RESTAURANT'; workRestaurantId?: string };
+    if (me.role === 'RESTAURANT') {
+      const rid = me.workRestaurantId;
+      if (!rid) return res.status(403).json({ message: 'Forbidden' });
+      const items = await prisma.drone.findMany({
+        where: { OR: [{ homeStationId: rid }, { currentStationId: rid }] },
+        include: { homeStation: { select: { id: true, name: true } }, currentStation: { select: { id: true, name: true } } },
+      });
+      return res.json(items);
+    }
     const items = await service.list();
     res.json(items);
   } catch (e) {
@@ -74,7 +85,7 @@ router.patch('/:id', auth(['ADMIN']), async (req, res, next) => {
   }
 });
 
-router.post('/assign', auth(['OPERATOR', 'ADMIN']), async (req, res, next) => {
+router.post('/assign', auth(['ADMIN']), async (req, res, next) => {
   // Gán drone cho đơn hàng dựa trên nhu cầu tải/trọng lượng/tầm với (OPERATOR/ADMIN)
   try {
     const schema = z.object({
@@ -110,5 +121,28 @@ router.post('/:id/return-home', auth(['ADMIN']), async (req, res, next) => {
     await prisma.drone.update({ where: { id: d.id }, data: ({ status: 'BUSY' as any } as any) });
     deliveryWorker.enqueueReturn(d.id, Number(d.homeStation.lat), Number(d.homeStation.lng), d.homeStationId ?? undefined);
     res.json({ message: 'Yêu cầu trả drone về nhà hàng đã được gửi. Drone sẽ di chuyển và tiêu hao pin.' });
+  } catch (e) { next(e); }
+});
+
+// Restaurant: Gọi drone về chi nhánh của tôi
+router.post('/:id/recall-to-me', auth(['RESTAURANT']), async (req, res, next) => {
+  try {
+    const me = (req as any).user as { role?: 'RESTAURANT'; workRestaurantId?: string };
+    const rid = me.workRestaurantId;
+    if (!rid) return res.status(403).json({ message: 'Forbidden' });
+    const id = req.params.id;
+    const d = await prisma.drone.findUnique({ where: { id }, include: { currentStation: true } });
+    if (!d) return res.status(404).json({ message: 'Drone not found' });
+    // Chỉ cho phép recall khi drone đang rảnh
+    if (d.status !== 'AVAILABLE') {
+      return res.status(400).json({ message: 'Drone phải ở trạng thái AVAILABLE để gọi về.' });
+    }
+    // Lấy toạ độ chi nhánh của tôi
+    const station = await prisma.restaurant.findUnique({ where: { id: rid }, select: { id: true, lat: true, lng: true } });
+    if (!station) return res.status(404).json({ message: 'Restaurant not found' });
+    // Đánh dấu BUSY và enqueue di chuyển về chi nhánh của tôi
+    await prisma.drone.update({ where: { id: d.id }, data: ({ status: 'BUSY' as any } as any) });
+    deliveryWorker.enqueueReturn(d.id, Number(station.lat), Number(station.lng), station.id);
+    res.json({ message: 'Đã gửi yêu cầu gọi drone về chi nhánh của bạn.' });
   } catch (e) { next(e); }
 });

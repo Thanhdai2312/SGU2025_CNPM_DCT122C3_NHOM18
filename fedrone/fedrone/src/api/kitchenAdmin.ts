@@ -3,6 +3,7 @@
 // - start(): chuyển đơn sang PREPARING và thông báo khách
 // - complete(): đánh dấu kitchenDone và tạo delivery QUEUED nếu chưa có
 import { API_BASE } from './client';
+import { getActiveAdminArea } from '../utils/adminAuth';
 
 export type KitchenOrder = {
   id: string;
@@ -14,7 +15,8 @@ export type KitchenOrder = {
 };
 
 function headers() {
-  const token = localStorage.getItem('adminToken');
+  const { session } = getActiveAdminArea();
+  const token = session?.token || localStorage.getItem('adminToken');
   return { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
 }
 
