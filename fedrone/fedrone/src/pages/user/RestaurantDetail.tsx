@@ -1,25 +1,25 @@
 // Trang chi tiết Nhà hàng: liệt kê menu và cho phép thêm món vào giỏ
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { restaurantsApi, type MenuItem, type Restaurant } from '../api/restaurants';
-import { cartApi } from '../api/cart';
-import { useAuth } from '../context/AuthContext';
+import { restaurantsApi, type MenuItem, type Restaurant } from '../../api/restaurants';
+import { cartApi } from '../../api/cart';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import Toast from '../components/Toast';
+import Toast from '../../components/Toast';
 
 // Ảnh món ăn/đồ uống (12 món chuẩn)
-import imgBurger from '../../Ảnh/burger.jpg';
-import imgCaesar from '../../Ảnh/caesar salad.jpg';
-import imgCheesePizza from '../../Ảnh/cheese pizza.jpg';
-import imgCola from '../../Ảnh/cola.jpg';
-import imgFries from '../../Ảnh/french-fries.jpg';
-import imgFriedChicken from '../../Ảnh/fried chicken.jpg';
-import imgSalmon from '../../Ảnh/grilled-salmon.jpg';
-import imgIcedTea from '../../Ảnh/iced-tea.jpg';
-import imgOrangeJuice from '../../Ảnh/orange-juice.jpg';
-import imgPepperoni from '../../Ảnh/pepperoni-pizza.jpg';
-import imgSpaghetti from '../../Ảnh/spaghetti-bolognese.jpg';
-import imgSushi from '../../Ảnh/sushi-set.jpg';
+import imgBurger from '../../../Ảnh/burger.jpg';
+import imgCaesar from '../../../Ảnh/caesar salad.jpg';
+import imgCheesePizza from '../../../Ảnh/cheese pizza.jpg';
+import imgCola from '../../../Ảnh/cola.jpg';
+import imgFries from '../../../Ảnh/french-fries.jpg';
+import imgFriedChicken from '../../../Ảnh/fried chicken.jpg';
+import imgSalmon from '../../../Ảnh/grilled-salmon.jpg';
+import imgIcedTea from '../../../Ảnh/iced-tea.jpg';
+import imgOrangeJuice from '../../../Ảnh/orange-juice.jpg';
+import imgPepperoni from '../../../Ảnh/pepperoni-pizza.jpg';
+import imgSpaghetti from '../../../Ảnh/spaghetti-bolognese.jpg';
+import imgSushi from '../../../Ảnh/sushi-set.jpg';
 
 const IMAGE_MAP: Record<string, string> = {
   'seed-restaurant-1': 'https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=1600',

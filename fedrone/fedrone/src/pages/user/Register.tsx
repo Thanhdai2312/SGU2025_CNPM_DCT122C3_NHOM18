@@ -1,8 +1,8 @@
 // Trang Đăng ký (khách)
 import { FormEvent, useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import Toast from '../components/Toast';
+import { useAuth } from '../../context/AuthContext';
+import Toast from '../../components/Toast';
 
 export default function Register() {
   const { register } = useAuth();

@@ -1,24 +1,24 @@
 // Trang Giỏ hàng: hiển thị các món đã chọn, chỉnh số lượng, tiếp tục tới Checkout
 import { useEffect, useState } from 'react';
-import Toast from '../components/Toast';
-import { cartApi, type Cart } from '../api/cart';
-import { useAuth } from '../context/AuthContext';
+import Toast from '../../components/Toast';
+import { cartApi, type Cart } from '../../api/cart';
+import { useAuth } from '../../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { droneApi } from '../api/drone';
+import { droneApi } from '../../api/drone';
 
 // Ảnh 12 món giống với trang menu nhà hàng
-import imgBurger from '../../Ảnh/burger.jpg';
-import imgCaesar from '../../Ảnh/caesar salad.jpg';
-import imgCheesePizza from '../../Ảnh/cheese pizza.jpg';
-import imgCola from '../../Ảnh/cola.jpg';
-import imgFries from '../../Ảnh/french-fries.jpg';
-import imgFriedChicken from '../../Ảnh/fried chicken.jpg';
-import imgSalmon from '../../Ảnh/grilled-salmon.jpg';
-import imgIcedTea from '../../Ảnh/iced-tea.jpg';
-import imgOrangeJuice from '../../Ảnh/orange-juice.jpg';
-import imgPepperoni from '../../Ảnh/pepperoni-pizza.jpg';
-import imgSpaghetti from '../../Ảnh/spaghetti-bolognese.jpg';
-import imgSushi from '../../Ảnh/sushi-set.jpg';
+import imgBurger from '../../../Ảnh/burger.jpg';
+import imgCaesar from '../../../Ảnh/caesar salad.jpg';
+import imgCheesePizza from '../../../Ảnh/cheese pizza.jpg';
+import imgCola from '../../../Ảnh/cola.jpg';
+import imgFries from '../../../Ảnh/french-fries.jpg';
+import imgFriedChicken from '../../../Ảnh/fried chicken.jpg';
+import imgSalmon from '../../../Ảnh/grilled-salmon.jpg';
+import imgIcedTea from '../../../Ảnh/iced-tea.jpg';
+import imgOrangeJuice from '../../../Ảnh/orange-juice.jpg';
+import imgPepperoni from '../../../Ảnh/pepperoni-pizza.jpg';
+import imgSpaghetti from '../../../Ảnh/spaghetti-bolognese.jpg';
+import imgSushi from '../../../Ảnh/sushi-set.jpg';
 
 export default function Cart() {
   const { user } = useAuth();
