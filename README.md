@@ -52,7 +52,7 @@ PAYMENT_WEBHOOK_SECRET=dev-webhook-secret
 Backend:
 
 ```cmd
-cd /d C:\CONGNNGHEPHANMEM\backend
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\backend
 npm install
 npm run prisma:generate
 npm run prisma:migrate
@@ -62,7 +62,7 @@ npm run prisma:seed
 Frontend:
 
 ```cmd
-cd /d C:\CONGNNGHEPHANMEM\fedrone\fedrone
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\fedrone\fedrone
 npm install
 ```
 
@@ -71,7 +71,7 @@ npm install
 - Backend (ts-node):
 
 ```cmd
-cd /d C:\CONGNNGHEPHANMEM\backend
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\backend
 npm run dev
 # Server lắng nghe tại http://localhost:3000
 ```
@@ -79,7 +79,7 @@ npm run dev
 - Frontend (Vite):
 
 ```cmd
-cd /d C:\CONGNNGHEPHANMEM\fedrone\fedrone
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\fedrone\fedrone
 set VITE_API_BASE_URL=http://localhost:3000
 npm run dev
 # Vite tại http://localhost:5173
@@ -92,10 +92,10 @@ Mở giao diện Dev: http://localhost:5173
 Build frontend và để backend phục vụ file tĩnh:
 
 ```cmd
-cd /d C:\CONGNNGHEPHANMEM\fedrone\fedrone
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\fedrone\fedrone
 npm run build
 
-cd /d C:\CONGNNGHEPHANMEM\backend
+cd /d C:\SGU2025_CNPM_DCT122C3_NHOM18\backend
 if not exist public mkdir public
 robocopy ..\fedrone\fedrone\dist public /E
 
