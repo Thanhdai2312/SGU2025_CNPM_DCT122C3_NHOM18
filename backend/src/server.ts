@@ -27,12 +27,7 @@ import { initWebSocket } from './websocket/server';
 dotenv.config();
 
 const app = express();
-// CORS nhiều máy: cấu hình danh sách origin qua env CORS_ORIGINS=origin1,origin2
-const allowedOrigins = (process.env.CORS_ORIGINS || '*')
-  .split(',')
-  .map(o => o.trim())
-  .filter(o => o.length > 0);
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors());
 app.use(express.json());
 app.use(morgan('dev'));
 // Áp dụng rate limit cơ bản cho toàn bộ API (có thể tinh chỉnh window & max qua env)
@@ -94,13 +89,11 @@ app.use((err: unknown, _req: express.Request, res: express.Response, _next: expr
 });
 
 const port = process.env.PORT || 3000;
-const host = process.env.HOST || '0.0.0.0';
 const httpServer = createServer(app);
 initWebSocket(httpServer);
 
-httpServer.listen(Number(port), host, () => {
-  console.log(`HTTP + WebSocket server lắng nghe tại http://${host === '0.0.0.0' ? 'YOUR_IP' : host}:${port}`);
-  console.log(`CORS origins: ${allowedOrigins.join(', ')}`);
+httpServer.listen(port, () => {
+  console.log(`HTTP + WebSocket server lắng nghe tại http://localhost:${port}`);
   // Tự động khởi động worker mô phỏng giao hàng (singleton)
   deliveryWorker.start(1000);
 });

@@ -6,12 +6,8 @@ import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret';
 
 export function initWebSocket(httpServer: HttpServer): SocketIOServer {
-  const wsOrigins = (process.env.CORS_ORIGINS || '*')
-    .split(',')
-    .map(o => o.trim())
-    .filter(o => o.length > 0);
   const io = new SocketIOServer(httpServer, {
-    cors: { origin: wsOrigins, methods: ['GET', 'POST'] },
+    cors: { origin: '*', methods: ['GET', 'POST'] },
   });
 
   io.use((socket: Socket, next: (err?: Error) => void) => {
