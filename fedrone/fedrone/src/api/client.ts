@@ -1,7 +1,7 @@
 // Cấu hình cơ bản cho API client phía frontend
-// - API_BASE: đọc từ .env hoặc mặc định http://localhost:3000
-// - Hàm tiện ích addAuth: thêm header Authorization nếu có token
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// - API_BASE: ưu tiên VITE_API_BASE sau đó VITE_API_BASE_URL để tương thích phiên bản cũ
+// - Mặc định http://localhost:3000 nếu chưa cấu hình
+const API_BASE = import.meta.env.VITE_API_BASE || import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export type LoginResponse = {
   accessToken: string;
