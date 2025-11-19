@@ -26,14 +26,6 @@ import { initWebSocket } from './websocket/server';
 
 dotenv.config();
 
-// Log uncaught/unhandled errors để chẩn đoán quá trình thoát bất thường
-process.on('uncaughtException', (err) => {
-  console.error('[fatal] uncaughtException:', err);
-});
-process.on('unhandledRejection', (reason) => {
-  console.error('[fatal] unhandledRejection:', reason);
-});
-
 const app = express();
 // CORS nhiều máy: cấu hình danh sách origin qua env CORS_ORIGINS=origin1,origin2
 const allowedOrigins = (process.env.CORS_ORIGINS || '*')
@@ -106,25 +98,9 @@ const host = process.env.HOST || '0.0.0.0';
 const httpServer = createServer(app);
 initWebSocket(httpServer);
 
-// Dummy keep-alive interval đề phòng môi trường thực thi tự đóng khi không phát hiện handle
-setInterval(() => {}, 60_000);
-// Heartbeat để xác nhận process còn sống (debug môi trường tự kill) mỗi 10s
-setInterval(() => {
-  console.log('[heartbeat] alive', new Date().toISOString());
-}, 10_000);
-
 httpServer.listen(Number(port), host, () => {
   console.log(`HTTP + WebSocket server lắng nghe tại http://${host === '0.0.0.0' ? 'YOUR_IP' : host}:${port}`);
   console.log(`CORS origins: ${allowedOrigins.join(', ')}`);
-  const disableWorker = process.env.DISABLE_WORKER === '1';
-  if (disableWorker) {
-    console.log('[worker] DeliveryWorker bị vô hiệu hoá (DISABLE_WORKER=1).');
-  } else {
-    try {
-      deliveryWorker.start(1000);
-      console.log('[worker] DeliveryWorker started.');
-    } catch (e) {
-      console.error('[worker] Lỗi khởi động DeliveryWorker', e);
-    }
-  }
+  // Tự động khởi động worker mô phỏng giao hàng (singleton)
+  deliveryWorker.start(1000);
 });

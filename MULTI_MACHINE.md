@@ -134,15 +134,5 @@ Nếu dùng mạng VPN (Radmin) thay IP Wi-Fi hãy thay `10.61.71.220` bằng IP
 - Thêm health check `/api/health` hiển thị thời gian chạy worker.
 - Thêm metrics endpoint `/api/metrics` cho Prometheus.
 
-## 11. Chạy bằng Docker (1 server, nhiều client)
-- Xem `DOCKER.md` để build & chạy nhanh với `docker compose` (MySQL + app).
-- Cách nhanh nhất: trên máy server chạy:
-```cmd
-cd C:\CONGNNGHEPHANMEM
-docker compose build
-docker compose up -d
-```
-- Client chỉ cần mở trình duyệt tới `http://<IP_S>:3000` hoặc chạy FE dev và trỏ `VITE_API_BASE` về `http://<IP_S>:3000`.
-
 ---
 Tài liệu này hỗ trợ demo đa máy: một backend dùng chung, nhiều frontend truy cập và nhận realtime update.
