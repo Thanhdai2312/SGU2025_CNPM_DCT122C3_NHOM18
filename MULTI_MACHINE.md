@@ -86,6 +86,49 @@ echo VITE_API_BASE=http://<IP_S>:3000 > .env
 npm run dev
 ```
 
+## 10. Ví dụ cấu hình thực tế (máy này làm Server)
+Giả sử IP Wi-Fi của máy Server: `10.61.71.220` (xem bằng `ipconfig`).
+
+File `backend/.env` mẫu:
+```env
+PORT=3000
+HOST=0.0.0.0
+JWT_SECRET=dev-secret-change
+PAYMENT_WEBHOOK_SECRET=dev-webhook-secret-change
+CORS_ORIGINS=http://10.61.71.220:5173
+RATE_LIMIT_WINDOW=60000
+RATE_LIMIT_MAX=120
+METRICS_TOKEN=secret-metrics-token
+DATABASE_URL=mysql://root:1234@localhost:3306/drone_fastfood
+```
+
+Khởi động backend:
+```cmd
+cd backend
+npm install
+npm run prisma:migrate
+npm run build
+npm start
+```
+
+Trên mỗi máy client tạo `.env`:
+```env
+VITE_API_BASE=http://10.61.71.220:3000
+```
+Sau đó:
+```cmd
+cd fedrone\fedrone
+npm install
+npm run dev
+```
+
+Kiểm tra metrics (cần header nếu đặt token):
+```cmd
+curl -H "x-metrics-token: secret-metrics-token" http://10.61.71.220:3000/api/metrics
+```
+
+Nếu dùng mạng VPN (Radmin) thay IP Wi-Fi hãy thay `10.61.71.220` bằng IP VPN (ví dụ `26.181.61.232`).
+
 ## 9. Gợi ý mở rộng
 - Thêm script `npm run dev:lan` tự động in địa chỉ IP.
 - Thêm health check `/api/health` hiển thị thời gian chạy worker.

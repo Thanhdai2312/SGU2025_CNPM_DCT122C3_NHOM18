@@ -24,3 +24,26 @@ export function auth(requiredRoles?: string[]) {
     }
   };
 }
+
+// Rate limiter đơn giản per-IP (in-memory). Sản xuất nên dùng Redis.
+export function rateLimit(options?: { windowMs?: number; max?: number }) {
+  const windowMs = options?.windowMs ?? Number(process.env.RATE_LIMIT_WINDOW || 60000);
+  const max = options?.max ?? Number(process.env.RATE_LIMIT_MAX || 120);
+  const hits = new Map<string, { count: number; resetAt: number }>();
+  return (req: Request, res: Response, next: NextFunction) => {
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || req.socket.remoteAddress || 'unknown';
+    const now = Date.now();
+    const entry = hits.get(ip);
+    if (!entry || entry.resetAt < now) {
+      hits.set(ip, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+    entry.count += 1;
+    if (entry.count > max) {
+      const retrySec = Math.ceil((entry.resetAt - now) / 1000);
+      res.setHeader('Retry-After', String(retrySec));
+      return res.status(429).json({ message: 'Too Many Requests', retryAfterSeconds: retrySec });
+    }
+    next();
+  };
+}

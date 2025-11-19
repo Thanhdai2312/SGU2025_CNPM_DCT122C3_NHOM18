@@ -7,6 +7,7 @@ import path from 'path';
 import fs from 'fs';
 
 import { router as healthRouter } from './api/health';
+import { router as metricsRouter } from './api/metrics';
 import { router as restaurantsRouter } from './api/restaurants';
 import { router as authRouter } from './api/auth';
 import { router as cartRouter } from './api/cart';
@@ -20,6 +21,7 @@ import menuAdminRouter from './api/menuAdmin';
 import { router as usersAdminRouter } from './api/usersAdmin';
 import { router as kitchenAdminRouter } from './api/kitchenAdmin';
 import { deliveryWorker } from './services/deliveryWorker';
+import { rateLimit } from './api/middlewares';
 import { initWebSocket } from './websocket/server';
 
 dotenv.config();
@@ -33,10 +35,13 @@ const allowedOrigins = (process.env.CORS_ORIGINS || '*')
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(morgan('dev'));
+// Áp dụng rate limit cơ bản cho toàn bộ API (có thể tinh chỉnh window & max qua env)
+app.use(rateLimit());
 
 // Định tuyến API chính của hệ thống
 app.use('/api/health', healthRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/metrics', metricsRouter);
 app.use('/api/restaurants', restaurantsRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/checkout', checkoutRouter);
