@@ -1,7 +1,9 @@
 // Cấu hình cơ bản cho API client phía frontend
-// - API_BASE: đọc từ .env hoặc mặc định http://localhost:3000
+// - Ưu tiên biến môi trường VITE_API_BASE_URL nếu KHÔNG phải localhost (tránh bị build cố định localhost khi deploy LAN)
+// - Nếu env là localhost nhưng người dùng truy cập qua IP mạng nội bộ -> dùng window.location.origin
 // - Hàm tiện ích addAuth: thêm header Authorization nếu có token
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const envBase = import.meta.env.VITE_API_BASE_URL as string | undefined;
+const API_BASE = (!envBase || /localhost|127\.0\.0\.1/i.test(envBase)) ? window.location.origin : envBase;
 
 export type LoginResponse = {
   accessToken: string;
@@ -16,7 +18,8 @@ async function request(path: string, options: RequestInit = {}) {
   };
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, { ...options, headers });
   const ct = res.headers.get('content-type') || '';
   if (!res.ok) {
     try {

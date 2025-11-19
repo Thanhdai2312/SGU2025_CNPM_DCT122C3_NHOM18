@@ -65,10 +65,23 @@ app.use('/api/admin/kitchen', kitchenAdminRouter);
   ];
   const staticDir = candidates.find(p => fs.existsSync(p));
   if (staticDir) {
-    app.use(express.static(staticDir));
+    // Thiết lập cache-control: asset cache dài, HTML luôn no-store để tránh dùng bản cũ trên điện thoại
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api')) return next();
+      if (/\.html$/i.test(req.path) || req.path === '/' ) {
+        res.set('Cache-Control', 'no-store');
+      } else if (/\.(js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|otf)$/i.test(req.path)) {
+        res.set('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+      next();
+    });
+
+    // Không để express.static tự trả index.html, ta chủ động fallback để set no-store
+    app.use(express.static(staticDir, { index: false }));
     // SPA fallback: chỉ áp dụng cho route không phải /api
     app.get('*', (req, res, next) => {
       if (req.path.startsWith('/api')) return next();
+      res.set('Cache-Control', 'no-store');
       res.sendFile(path.join(staticDir, 'index.html'));
     });
     console.log(`[static] Phục vụ frontend từ: ${staticDir}`);
