@@ -3,32 +3,25 @@ import { Plane, MapPin, Clock } from 'lucide-react';
 // - Giới thiệu dịch vụ drone giao đồ ăn
 // - Điều hướng nhanh tới menu/đặt hàng
 import { Link } from 'react-router-dom';
-
-const branches = [
-  {
-    id: 1,
-    name: 'P&Đ CN1',
-    location: '213A Nguyễn Văn Cừ, Phường 03, Quận 5, Thành phố Hồ Chí Minh 72700, Vietnam',
-    deliveryTime: '15-25 min',
-    image: 'https://images.pexels.com/photos/1639562/pexels-photo-1639562.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    id: 2,
-    name: 'P&Đ CN2',
-    location: '230 Âu Dương Lân, Phường Rạch Ông, Quận 8, Thành phố Hồ Chí Minh, Vietnam',
-    deliveryTime: '20-30 min',
-    image: 'https://images.pexels.com/photos/941861/pexels-photo-941861.jpeg?auto=compress&cs=tinysrgb&w=800'
-  },
-  {
-    id: 3,
-    name: 'P&Đ CN3',
-    location: '254/21 Bến Vân Đồn, Phường 2, Quận 4, Thành phố Hồ Chí Minh, Vietnam',
-    deliveryTime: '18-28 min',
-    image: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=800'
-  }
-];
+import { useEffect, useState } from 'react';
+import { restaurantsApi, type Restaurant } from '../../api/restaurants';
+import { io } from 'socket.io-client';
+import { API_BASE } from '../../api/client';
 
 export default function Home() {
+  const [branches, setBranches] = useState<Restaurant[]>([]);
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      try { const list = await restaurantsApi.list(); if (mounted) setBranches(list); } catch {}
+    };
+    load();
+    // realtime: tự động reload khi admin thêm/xoá/sửa
+    const socket = io(API_BASE, { autoConnect: true });
+    socket.on('restaurants-updated', () => { load(); });
+    return () => { mounted = false; try { socket.disconnect(); } catch {} };
+  }, []);
+
   return (
     <>
   {/* Khu vực Hero (giới thiệu) */}
@@ -65,14 +58,14 @@ export default function Home() {
               >
                 <div className="relative h-56 overflow-hidden">
                   <img
-                    src={branch.image}
+                    src={'https://images.pexels.com/photos/941861/pexels-photo-941861.jpeg?auto=compress&cs=tinysrgb&w=800'}
                     alt={branch.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
                   <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-full flex items-center space-x-1.5 shadow-lg">
                     <Clock className="w-4 h-4 text-blue-600" />
-                    <span className="text-sm font-semibold text-gray-900">{branch.deliveryTime}</span>
+                    <span className="text-sm font-semibold text-gray-900">15-30 min</span>
                   </div>
                 </div>
                 <div className="p-6">
@@ -81,9 +74,9 @@ export default function Home() {
                   </h4>
                   <div className="flex items-start space-x-2 text-gray-600 mb-6">
                     <MapPin className="w-5 h-5 mt-0.5 flex-shrink-0 text-gray-400" />
-                    <span className="text-sm leading-relaxed">{branch.location}</span>
+                    <span className="text-sm leading-relaxed">{branch.address}</span>
                   </div>
-                  <Link to={`/restaurants/seed-restaurant-${branch.id}`} className="block w-full text-center py-3 bg-gradient-to-r from-blue-600 to-sky-600 text-white font-semibold rounded-xl shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-200">
+                  <Link to={`/restaurants/${branch.id}`} className="block w-full text-center py-3 bg-gradient-to-r from-blue-600 to-sky-600 text-white font-semibold rounded-xl shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40 transform hover:-translate-y-0.5 transition-all duration-200">
                     Đặt món ngay
                   </Link>
                 </div>

@@ -85,6 +85,21 @@ router.patch('/:id', auth(['ADMIN']), async (req, res, next) => {
   }
 });
 
+router.delete('/:id', auth(['ADMIN']), async (req, res, next) => {
+  // Xoá drone (ADMIN) nếu đủ điều kiện
+  try {
+    const result = await service.remove(req.params.id);
+    if (!result.ok) {
+      const status = result.reason === 'NOT_FOUND' ? 404 : 409;
+      const message = result.reason === 'BUSY' ? 'Drone đang bận, không thể xoá' : (result.reason === 'HAS_DELIVERY' ? 'Drone có liên kết giao hàng' : 'Không tìm thấy drone');
+      return res.status(status).json({ message });
+    }
+    res.json({ ok: true });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.post('/assign', auth(['ADMIN']), async (req, res, next) => {
   // Gán drone cho đơn hàng dựa trên nhu cầu tải/trọng lượng/tầm với (OPERATOR/ADMIN)
   try {

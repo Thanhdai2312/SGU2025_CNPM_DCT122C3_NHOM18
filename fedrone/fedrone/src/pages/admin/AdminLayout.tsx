@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
-import { Home, ClipboardList, Plane, Radar, LogOut, User2, Utensils, Users, ChefHat, RefreshCw } from 'lucide-react';
+import { Home, ClipboardList, Plane, Radar, LogOut, User2, Utensils, Users, ChefHat, RefreshCw, Building2 } from 'lucide-react';
 import { useMemo } from 'react';
 import { useRestaurantName } from '../../hooks/useRestaurantName';
 import { getActiveAdminArea, clearAdminSession, clearRestaurantSession, getAdminSession, getRestaurantSession } from '../../utils/adminAuth';
@@ -47,6 +47,9 @@ export default function AdminLayout() {
                 </NavLink>
                 <NavLink to="/admin/drones" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? 'bg-rose-600' : 'hover:bg-rose-600/60'}`}>
                   <Plane className="w-4 h-4" /> Drone
+                </NavLink>
+                <NavLink to="/admin/restaurants" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? 'bg-rose-600' : 'hover:bg-rose-600/60'}`}>
+                  <Building2 className="w-4 h-4" /> Nhà hàng
                 </NavLink>
                 <NavLink to="/admin/deliveries" className={({ isActive }) => `flex items-center gap-2 px-3 py-2 rounded ${isActive ? 'bg-rose-600' : 'hover:bg-rose-600/60'}`}>
                   <Home className="w-4 h-4" /> Giao hàng

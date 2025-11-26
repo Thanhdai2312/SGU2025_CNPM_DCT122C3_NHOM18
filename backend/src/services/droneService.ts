@@ -65,6 +65,10 @@ export class DroneService {
     return this.drones.update(id, data);
   }
 
+  async remove(id: string) {
+    return this.drones.delete(id);
+  }
+
   // Chọn drone đơn giản: drone AVAILABLE đầu tiên đủ pin, đủ tải, đủ tầm bay
   async assignDroneToOrder(params: {
     orderId: string;

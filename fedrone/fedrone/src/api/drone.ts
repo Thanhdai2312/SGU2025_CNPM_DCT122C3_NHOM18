@@ -73,6 +73,14 @@ export const droneApi = {
     if (!res.ok) throw new Error(await res.text());
     return res.json();
   },
+  async remove(id: string, tokenOverride?: string): Promise<{ ok: true }> {
+    const res = await fetch(`${API_BASE}/api/drone/${id}`, {
+      method: 'DELETE',
+      headers: adminAuthHeaders(tokenOverride),
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
+  },
   async returnHome(id: string, tokenOverride?: string): Promise<Drone> {
     const res = await fetch(`${API_BASE}/api/drone/${id}/return-home`, {
       method: 'POST',

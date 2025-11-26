@@ -18,6 +18,7 @@ import droneRouter from './api/drone';
 import deliveryRouter from './api/delivery';
 import trackingRouter from './api/tracking';
 import menuAdminRouter from './api/menuAdmin';
+import restaurantsAdminRouter from './api/restaurantsAdmin';
 import { router as usersAdminRouter } from './api/usersAdmin';
 import { router as kitchenAdminRouter } from './api/kitchenAdmin';
 import { deliveryWorker } from './services/deliveryWorker';
@@ -46,6 +47,7 @@ app.use('/api/drone', droneRouter);
 app.use('/api/delivery', deliveryRouter);
 app.use('/api/tracking', trackingRouter);
 app.use('/api/admin/menu', menuAdminRouter);
+app.use('/api/admin/restaurants', restaurantsAdminRouter);
 app.use('/api/admin/users', usersAdminRouter);
 app.use('/api/admin/kitchen', kitchenAdminRouter);
 

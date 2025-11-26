@@ -58,4 +58,16 @@ export class DroneRepository {
   }>) {
     return this.db.drone.update({ where: { id }, data: data as any });
   }
+
+  // Xoá drone nếu không có delivery liên kết và không BUSY
+  async delete(id: string) {
+    // Kiểm tra có delivery liên kết
+    const delivery = await this.db.delivery.findFirst({ where: { droneId: id } });
+    if (delivery) return { ok: false, reason: 'HAS_DELIVERY' };
+    const d = await this.db.drone.findUnique({ where: { id } });
+    if (!d) return { ok: false, reason: 'NOT_FOUND' };
+    if (d.status === DroneStatus.BUSY) return { ok: false, reason: 'BUSY' };
+    await this.db.drone.delete({ where: { id } });
+    return { ok: true };
+  }
 }

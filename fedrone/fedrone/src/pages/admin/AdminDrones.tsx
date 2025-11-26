@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { droneApi, type Drone, type Availability } from '../../api/drone';
 import { restaurantsApi, type Restaurant } from '../../api/restaurants';
-import { Pencil, Plus, RefreshCw, Save, X } from 'lucide-react';
+import { Pencil, Plus, RefreshCw, Save, X, Trash2 } from 'lucide-react';
 
 type FormState = {
   id?: string;
@@ -146,6 +146,7 @@ export default function AdminDrones() {
                 <td className="px-4 py-2 text-right space-x-2">
                   <button onClick={() => onEdit(d)} className="px-2 py-1 rounded bg-blue-600 hover:bg-blue-500 text-white inline-flex items-center gap-1"><Pencil className="w-4 h-4" />Sửa</button>
                   <ReturnHomeButton d={d} onDone={loadAll} />
+                  <DeleteDroneButton d={d} onDone={loadAll} />
                 </td>
               </tr>
             ))}
@@ -240,6 +241,32 @@ function ReturnHomeButton({ d, onDone }: { d: Drone; onDone: () => Promise<void>
   return (
     <button disabled={!eligible || working} onClick={() => void onClick()} className={`px-2 py-1 rounded inline-flex items-center gap-1 ${eligible ? 'bg-emerald-600 hover:bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}>
       Trả về nhà hàng
+    </button>
+  );
+}
+
+function DeleteDroneButton({ d, onDone }: { d: Drone; onDone: () => Promise<void> | void }) {
+  const [working, setWorking] = useState(false);
+  const token = useMemo(() => {
+    try { return localStorage.getItem('adminToken') || undefined; } catch { return undefined; }
+  }, []);
+  const disabled = d.status === 'BUSY';
+  const onClick = async () => {
+    if (disabled) return;
+    if (!confirm(`Xoá drone ${d.code}?`)) return;
+    try {
+      setWorking(true);
+      await droneApi.remove(d.id, token);
+      await onDone();
+    } catch (e: any) {
+      alert(e?.message || 'Không thể xoá drone');
+    } finally {
+      setWorking(false);
+    }
+  };
+  return (
+    <button disabled={disabled || working} onClick={() => void onClick()} className={`px-2 py-1 rounded inline-flex items-center gap-1 ${disabled ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-red-600 hover:bg-red-500 text-white'}`}>
+      <Trash2 className="w-4 h-4" /> Xoá
     </button>
   );
 }

@@ -25,6 +25,7 @@ import AdminOrderDetail from './pages/admin/AdminOrderDetail.tsx';
 import AdminProducts from './pages/admin/AdminProducts.tsx';
 import AdminKitchen from './pages/admin/AdminKitchen.tsx';
 import AdminUsers from './pages/admin/AdminUsers.tsx';
+import AdminRestaurants from './pages/admin/AdminRestaurants.tsx';
 import RestaurantLogin from './pages/restaurant/RestaurantLogin.tsx';
 import RestaurantGuard from './components/RestaurantGuard.tsx';
 import RestaurantLayout from './pages/restaurant/RestaurantLayout.tsx';
@@ -53,6 +54,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="orders" element={<AdminOrders />} />
             <Route path="orders/:orderId" element={<AdminOrderDetail />} />
             <Route path="drones" element={<AdminDrones />} />
+            <Route path="restaurants" element={<AdminRestaurants />} />
             <Route path="deliveries" element={<AdminDeliveries />} />
             <Route path="monitor" element={<AdminMonitor />} />
             <Route path="products" element={<AdminProducts />} />

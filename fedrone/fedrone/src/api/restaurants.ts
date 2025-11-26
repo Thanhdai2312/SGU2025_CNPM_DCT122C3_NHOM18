@@ -3,7 +3,7 @@
 // - menu(): danh sách món còn bán của 1 chi nhánh
 import { API_BASE } from './client';
 
-export type Restaurant = { id: string; name: string; address: string; lat?: number; lng?: number };
+export type Restaurant = { id: string; name: string; address: string; lat?: number; lng?: number; imageUrl?: string | null };
 export type MenuItem = { id: string; name: string; price: number; weight?: number; type?: 'FOOD' | 'DRINK'; imageUrl?: string | null; stock?: number | null };
 
 export const restaurantsApi = {
