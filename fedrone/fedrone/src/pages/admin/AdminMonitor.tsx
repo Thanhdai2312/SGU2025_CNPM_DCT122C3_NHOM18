@@ -62,6 +62,27 @@ export default function AdminMonitor() {
           }
         }
       }
+      // Live update tracking map with latest payload (drone, status, eta)
+      setTracking((prev) => {
+        if (!prev || payload?.orderId !== prev.orderId) return prev;
+        const next = {
+          ...prev,
+          deliveryId: payload.deliveryId ?? prev.deliveryId,
+          tracking: {
+            ...prev.tracking,
+            status: payload.status || prev.tracking.status,
+            eta: payload.eta || prev.tracking.eta,
+            completedAt: payload.completedAt || prev.tracking.completedAt,
+            drone: payload.drone ? { lat: payload.drone.lat, lng: payload.drone.lng } : prev.tracking.drone,
+          }
+        } as TrackingResponse;
+        if (next.restaurant && next.destination && next.tracking.drone) {
+          const total = haversineKm(next.restaurant.lat, next.restaurant.lng, next.destination.lat, next.destination.lng);
+          const remaining = haversineKm(next.tracking.drone.lat, next.tracking.drone.lng, next.destination.lat, next.destination.lng);
+          setHalfway(remaining <= total / 2);
+        }
+        return next;
+      });
     });
     return () => { socket.disconnect(); };
   }, [adminToken]);
@@ -86,40 +107,8 @@ export default function AdminMonitor() {
   return (
     <div className="relative">
       <h2 className="text-xl font-semibold mb-4">Theo dõi thời gian thực</h2>
-      <div className="bg-white rounded-xl shadow p-4">
-        {events.length === 0 ? (
-          <div className="text-gray-600">Chưa có sự kiện realtime nào.</div>
-        ) : (
-          <div className="overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 text-gray-600">
-                <tr>
-                  <th className="text-left px-4 py-2">Thời điểm</th>
-                  <th className="text-left px-4 py-2">Delivery</th>
-                  <th className="text-left px-4 py-2">Order</th>
-                  <th className="text-left px-4 py-2">Trạng thái</th>
-                  <th className="text-left px-4 py-2">Giai đoạn</th>
-                  <th className="text-left px-4 py-2">ETA</th>
-                  <th className="text-left px-4 py-2">Hoàn tất</th>
-                </tr>
-              </thead>
-              <tbody>
-                {events.map((e, idx) => (
-                  <tr key={`${e.deliveryId}-${idx}`} className="border-t hover:bg-gray-50 cursor-pointer" onClick={() => setSelectedOrderId(e.orderId)}>
-                    <td className="px-4 py-2">{new Date(e.at).toLocaleTimeString('vi-VN')}</td>
-                    <td className="px-4 py-2 font-mono">{e.deliveryId}</td>
-                    <td className="px-4 py-2 font-mono">{e.orderId}</td>
-                    <td className="px-4 py-2"><span className="px-2 py-0.5 rounded text-xs bg-gray-100">{e.status}</span></td>
-                    <td className="px-4 py-2 text-xs text-gray-600">{e.phase || '—'}</td>
-                    <td className="px-4 py-2">{e.eta ? new Date(e.eta).toLocaleString('vi-VN') : '—'}</td>
-                    <td className="px-4 py-2">{e.completedAt ? new Date(e.completedAt).toLocaleString('vi-VN') : '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* Bảng sự kiện realtime tạm ẩn theo yêu cầu admin */}
+      {/* <div className="bg-white rounded-xl shadow p-4"> ... </div> */}
       {/* Map + remaining distance for selected order */}
       {tracking && tracking.restaurant && tracking.destination && (
         <div className="mt-6 bg-white rounded-xl shadow p-4">
