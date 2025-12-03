@@ -109,7 +109,7 @@ export default function OrderTracking() {
   };
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-6 py-8 relative">
       <h2 className="text-3xl font-bold mb-6 text-sky-700">Theo dõi đơn hàng</h2>
       {error && <div className="text-red-600 mb-4">{error}</div>}
       {!error && !data && <div>Đang tải…</div>}
@@ -180,6 +180,9 @@ export default function OrderTracking() {
             <div className="font-bold text-sky-700">{Number(data.total).toLocaleString('vi-VN')} đ</div>
           </div>
         </div>
+      )}
+      {showHalfwayToast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-amber-100 text-amber-800 border border-amber-300 rounded shadow">Món ăn của bạn đã đi được nửa quãng đường.</div>
       )}
     </div>
   );
