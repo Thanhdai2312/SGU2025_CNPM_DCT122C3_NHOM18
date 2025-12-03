@@ -29,6 +29,7 @@ export default function AdminMonitor() {
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [tracking, setTracking] = useState<TrackingResponse | null>(null);
   const [halfway, setHalfway] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
   const adminToken = useMemo(() => {
     try { return localStorage.getItem('adminToken') || undefined; } catch { return undefined; }
   }, []);
@@ -48,6 +49,18 @@ export default function AdminMonitor() {
       // Auto-select the latest order for map view
       if (payload?.orderId) {
         setSelectedOrderId(payload.orderId);
+      }
+      // Timed toast when half-way reached for the current selected order
+      if (tracking && tracking.restaurant && tracking.destination) {
+        const total = haversineKm(tracking.restaurant.lat, tracking.restaurant.lng, tracking.destination.lat, tracking.destination.lng);
+        const drone = payload.drone || tracking.tracking.drone;
+        if (drone && total > 0) {
+          const remaining = haversineKm(drone.lat, drone.lng, tracking.destination.lat, tracking.destination.lng);
+          if (remaining <= total / 2 && ['EN_ROUTE','DELIVERING','DISPATCHED','ASSIGNED'].includes(String(payload.status || tracking.tracking.status))) {
+            setToast('Món ăn đã đi được nửa quãng đường.');
+            setTimeout(() => setToast(null), 5000);
+          }
+        }
       }
     });
     return () => { socket.disconnect(); };
@@ -71,7 +84,7 @@ export default function AdminMonitor() {
   }, [selectedOrderId, adminToken]);
 
   return (
-    <div>
+    <div className="relative">
       <h2 className="text-xl font-semibold mb-4">Theo dõi thời gian thực</h2>
       <div className="bg-white rounded-xl shadow p-4">
         {events.length === 0 ? (
@@ -129,6 +142,9 @@ export default function AdminMonitor() {
           </div>
           <RemainingAdminDistanceInfo t={tracking} />
         </div>
+      )}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-amber-100 text-amber-800 border border-amber-300 rounded shadow">{toast}</div>
       )}
     </div>
   );

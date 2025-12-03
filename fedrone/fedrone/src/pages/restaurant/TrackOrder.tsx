@@ -17,6 +17,7 @@ export default function TrackOrderRestaurant() {
   const [data, setData] = useState<TrackingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [halfway, setHalfway] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderId) return;
@@ -29,6 +30,10 @@ export default function TrackOrderRestaurant() {
           const total = haversineKm(t.restaurant.lat, t.restaurant.lng, t.destination.lat, t.destination.lng);
           const remaining = haversineKm(t.tracking.drone.lat, t.tracking.drone.lng, t.destination.lat, t.destination.lng);
           setHalfway(remaining <= total / 2);
+          if (remaining <= total / 2) {
+            setToast('Món ăn đã đi được nửa quãng đường.');
+            setTimeout(() => setToast(null), 5000);
+          }
         }
       } catch (e: any) {
         setError(e?.message || 'Không tải được theo dõi món ăn');
@@ -37,7 +42,7 @@ export default function TrackOrderRestaurant() {
   }, [orderId]);
 
   return (
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-6 py-8 relative">
       <h2 className="text-2xl font-bold mb-4">Theo dõi món ăn</h2>
       {error && <div className="text-red-600 mb-4">{error}</div>}
       {!error && !data && <div>Đang tải…</div>}
@@ -62,6 +67,9 @@ export default function TrackOrderRestaurant() {
           </div>
           <RemainingInfo t={data} />
         </div>
+      )}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 px-4 py-3 bg-amber-100 text-amber-800 border border-amber-300 rounded shadow">{toast}</div>
       )}
     </div>
   );

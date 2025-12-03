@@ -28,6 +28,7 @@ export default function OrderTracking() {
   const [data, setData] = useState<TrackingResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const [showHalfwayToast, setShowHalfwayToast] = useState(false);
 
   useEffect(() => {
     if (!orderId) return;
@@ -71,6 +72,20 @@ export default function OrderTracking() {
       if (typeof payload?.note === 'string' && payload.note) {
         setNote(payload.note);
       }
+      // Halfway toast + remaining distance calculation
+      setData((prev) => {
+        if (!prev || !prev.restaurant || !prev.destination) return prev;
+        const total = haversineKm(prev.restaurant.lat, prev.restaurant.lng, prev.destination.lat, prev.destination.lng);
+        const drone = payload.drone || prev.tracking.drone;
+        if (drone && total > 0) {
+          const remaining = haversineKm(drone.lat, drone.lng, prev.destination.lat, prev.destination.lng);
+          if (remaining <= total / 2 && ['EN_ROUTE','DELIVERING','DISPATCHED','ASSIGNED'].includes(String(payload.status || prev.tracking.status))) {
+            setShowHalfwayToast(true);
+            setTimeout(() => setShowHalfwayToast(false), 5000);
+          }
+        }
+        return prev;
+      });
       // Nếu đã hoàn tất, xoá lastPaidOrderId để nút tắt khỏi header
       if (payload?.status === 'COMPLETED') {
         try { localStorage.removeItem('lastPaidOrderId'); } catch {}
@@ -131,6 +146,13 @@ export default function OrderTracking() {
               </MapContainer>
             </div>
           )}
+          {data.restaurant && data.destination && (
+            <RemainingDistance
+              restaurant={{ lat: data.restaurant.lat, lng: data.restaurant.lng }}
+              destination={{ lat: data.destination.lat, lng: data.destination.lng }}
+              drone={data.tracking.drone}
+            />
+          )}
           {data.restaurant && (
             <div className="text-sm text-gray-600 mb-2">Nhà hàng: <span className="text-gray-900">{data.restaurant.name}</span></div>
           )}
@@ -187,4 +209,26 @@ function renderStatusText(status?: string, note?: string | null) {
     default:
       return s || '—';
   }
+}
+
+function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // km
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+function toRad(x: number) { return x * Math.PI / 180; }
+
+function RemainingDistance(props: { restaurant: { lat: number; lng: number }, destination: { lat: number; lng: number }, drone?: { lat: number; lng: number } | null }) {
+  const total = haversineKm(props.restaurant.lat, props.restaurant.lng, props.destination.lat, props.destination.lng);
+  const remaining = props.drone ? haversineKm(props.drone.lat, props.drone.lng, props.destination.lat, props.destination.lng) : undefined;
+  return (
+    <div className="mb-2 text-sm text-gray-700">
+      {typeof remaining === 'number' && (
+        <div>Khoảng cách còn lại: <span className="font-semibold">{remaining.toFixed(2)} km</span> (tổng {total.toFixed(2)} km)</div>
+      )}
+    </div>
+  );
 }
