@@ -46,6 +46,11 @@ export const restaurantRepository = {
   // Tạo nhà hàng mới
   create: (data: { name: string; address: string; lat: number; lng: number }) =>
     prisma.restaurant.create({ data }),
+  // Kiểm tra trùng tên hoặc trùng địa chỉ
+  existsByNameOrAddress: async (name: string, address: string) => {
+    const found = await prisma.restaurant.findFirst({ where: { OR: [{ name }, { address }] } });
+    return !!found;
+  },
   // Cập nhật thông tin nhà hàng
   update: (id: string, data: Partial<{ name: string; address: string; lat: number; lng: number }>) =>
     prisma.restaurant.update({ where: { id }, data }),

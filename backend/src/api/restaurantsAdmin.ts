@@ -27,7 +27,12 @@ router.post('/', auth(['ADMIN']), async (req, res, next) => {
     const created = await restaurantService.create(input);
     ioInstance?.emit('restaurants-updated', { action: 'created', restaurant: created });
     res.status(201).json(created);
-  } catch (e) { next(e); }
+  } catch (e: any) {
+    if (e?.message === 'DUPLICATE_RESTAURANT') {
+      return res.status(409).json({ message: 'Tên hoặc địa chỉ nhà hàng đã tồn tại' });
+    }
+    next(e);
+  }
 });
 
 // Cập nhật thông tin nhà hàng

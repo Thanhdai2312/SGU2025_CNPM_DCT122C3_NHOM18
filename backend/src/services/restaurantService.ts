@@ -20,6 +20,12 @@ export const restaurantService = {
   },
   // Tạo mới nhà hàng
   create: async (input: { name: string; address: string; lat: number; lng: number }) => {
+    // Chặn tạo trùng theo name hoặc address
+    const duplicate = await restaurantRepository.existsByNameOrAddress(input.name, input.address);
+    if (duplicate) {
+      const err = new Error('DUPLICATE_RESTAURANT');
+      throw err;
+    }
     const created = await restaurantRepository.create(input);
     // Sau khi tạo, clone menu từ template nếu có
     const templateId = await restaurantRepository.findTemplateRestaurantId();
