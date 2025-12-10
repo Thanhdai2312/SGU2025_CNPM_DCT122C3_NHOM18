@@ -46,6 +46,7 @@ export const orderRepository = {
         shippingFee: true,
         shippingAddress: true,
         userId: true,
+        restaurantId: true,
       },
     }),
   // Danh sách đơn theo nhà hàng dành cho RESTAURANT scope
@@ -62,6 +63,7 @@ export const orderRepository = {
         shippingFee: true,
         shippingAddress: true,
         userId: true,
+        restaurantId: true,
       },
     }),
 };

@@ -13,6 +13,7 @@ export type OrderSummary = {
   shippingFee: number;
   shippingAddress: string;
   userId?: string;
+  restaurantId?: string;
   delivery?: { status: string };
 };
 

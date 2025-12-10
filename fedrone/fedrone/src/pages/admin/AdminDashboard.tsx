@@ -6,7 +6,7 @@ import { TrendingUp, PackageCheck, Truck, Bot, RefreshCcw } from 'lucide-react';
 import { ordersApi, type OrderSummary } from '../../api/orders';
 import { deliveryApi, type Delivery } from '../../api/delivery';
 import { droneApi, type Drone } from '../../api/drone';
-import { restaurantsApi } from '../../api/restaurants';
+import { restaurantsApi, type Restaurant } from '../../api/restaurants';
 import { menuAdminApi, type MenuItemAdmin } from '../../api/menuAdmin';
 import { io } from 'socket.io-client';
 import { API_BASE } from '../../api/client';
@@ -21,6 +21,8 @@ export default function AdminDashboard() {
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [drones, setDrones] = useState<Drone[]>([]);
   const [lowStock, setLowStock] = useState<Array<MenuItemAdmin & { restaurantName: string }>>([]);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string>('all');
   // Khoảng ngày cho báo cáo doanh thu/đơn đã giao
   const initEnd = useMemo(() => new Date(), []);
   // Mặc định: báo cáo theo NGÀY HIỆN TẠI để khớp với "Doanh thu hôm nay"
@@ -43,6 +45,7 @@ export default function AdminDashboard() {
         setOrders(ordersRes);
         setDeliveries(delivRes);
         setDrones(dronesRes);
+        setRestaurants(restRes);
   // Lấy danh sách món sắp hết hàng ở tất cả chi nhánh (<= 5)
         const lows: Array<MenuItemAdmin & { restaurantName: string }> = [];
         for (const r of restRes) {
@@ -145,6 +148,7 @@ export default function AdminDashboard() {
     for (const d of completedDeliveries) {
       const ord = orders.find(o => o.id === d.orderId);
       if (!ord) continue;
+      if (selectedRestaurantId !== 'all' && ord.restaurantId && ord.restaurantId !== selectedRestaurantId) continue;
       if ((ord.paymentStatus || '').toUpperCase() !== 'PAID') continue;
       const key = toInputDate(new Date(d.completedAt!));
       const rec = mapPaid.get(key) || { date: key, total: 0, count: 0, orders: [] };
@@ -161,6 +165,7 @@ export default function AdminDashboard() {
     for (const d of completedDeliveries) {
       const ord = orders.find(o => o.id === d.orderId);
       if (!ord) continue;
+      if (selectedRestaurantId !== 'all' && ord.restaurantId && ord.restaurantId !== selectedRestaurantId) continue;
       const key = toInputDate(new Date(d.completedAt!));
       const rec = mapAll.get(key) || { date: key, total: 0, count: 0, orders: [] };
       rec.total += Number(ord.total || 0);
@@ -170,7 +175,7 @@ export default function AdminDashboard() {
     }
     // Không còn dùng allRows/allTotal vì báo cáo chỉ hiển thị PAID
     return { paidTotal, paidDaily: paidRows };
-  }, [orders, deliveries, startDate, endDate]);
+  }, [orders, deliveries, startDate, endDate, selectedRestaurantId]);
 
   // Chọn dữ liệu hiển thị theo chế độ
   const daily: DayRow[] = paidDaily;
@@ -192,6 +197,7 @@ export default function AdminDashboard() {
       setOrders(ordersRes);
       setDeliveries(delivRes);
       setDrones(dronesRes);
+      setRestaurants(restRes);
       const lows: Array<MenuItemAdmin & { restaurantName: string }> = [];
       for (const r of restRes) {
         try {
@@ -313,6 +319,21 @@ export default function AdminDashboard() {
             <div>
               <label className="block text-sm text-gray-600 mb-1">Đến ngày</label>
               <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="border rounded px-2 py-1" />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-1">Chi nhánh</label>
+              <select
+                value={selectedRestaurantId}
+                onChange={e => setSelectedRestaurantId(e.target.value)}
+                className="border rounded px-2 py-1 min-w-[180px]"
+              >
+                <option value="all">Tất cả chi nhánh</option>
+                {restaurants.map(r => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="flex-1" />
             <div className="flex items-end gap-2">
